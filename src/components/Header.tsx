@@ -1,31 +1,33 @@
 import { motion } from 'motion/react';
-import { Activity } from 'lucide-react';
 
 export default function Header() {
   return (
-    <header className="h-16 border-b border-white/10 flex items-center justify-between px-8 bg-[#0F1115]">
+    <header className="h-16 border-b border-black/5 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md relative z-50">
       <div className="flex items-center gap-3">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center font-bold text-white shadow-lg shadow-blue-900/20"
+          className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center font-black text-white shadow-xl shadow-orange-500/20 italic"
         >
-          A
+          AX
         </motion.div>
-        <span className="text-lg font-bold tracking-tight text-white uppercase">
-          ANTROVEX <span className="text-blue-500 font-light">AI</span>
-        </span>
+        <div className="flex flex-col -gap-1">
+          <span className="text-[14px] font-black tracking-[0.2em] text-black uppercase leading-none">
+            ANTROVEX_<span className="text-orange-500">PRO</span>
+          </span>
+          <span className="text-[8px] font-mono font-bold text-black/20 uppercase tracking-[0.4em]">Market_Intelligence_OS</span>
+        </div>
       </div>
       
-      <div className="flex items-center gap-6">
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-green-500/10 rounded-full border border-green-500/20">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] uppercase font-bold text-green-400 tracking-wider">System: gemini-3.1-pro-preview</span>
+      <div className="flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-orange-500/5 rounded border border-orange-500/10">
+          <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+          <span className="text-[9px] uppercase font-black text-orange-600/60 tracking-widest font-mono">Core: gemini-3.1-pro-preview</span>
         </div>
-        <nav className="flex gap-6 text-sm text-slate-400 font-medium">
-          <a href="#" className="text-white hover:text-blue-400 transition-colors">Analyzer</a>
-          <a href="#" className="hover:text-blue-400 transition-colors">History</a>
-          <a href="#" className="hover:text-blue-400 transition-colors">Settings</a>
+        <nav className="flex gap-8 text-[10px] text-black/40 font-black uppercase tracking-[0.2em]">
+          <a href="#" className="text-black border-b-2 border-orange-500 pb-1">Analyzer</a>
+          <a href="#" className="hover:text-orange-500 transition-colors">History</a>
+          <a href="#" className="hover:text-orange-500 transition-colors">Terminal</a>
         </nav>
       </div>
     </header>
