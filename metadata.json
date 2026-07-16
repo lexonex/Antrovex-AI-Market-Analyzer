@@ -1,0 +1,8 @@
+{
+  "name": "Antrovex AI Market Analyzer",
+  "description": "Professional AI-powered trading chart analysis platform using Google Gemini Vision to analyze trends, market structure, and technical patterns.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
