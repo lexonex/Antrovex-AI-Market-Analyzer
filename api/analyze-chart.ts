@@ -1,11 +1,11 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { geminiClient } from '../lib/ai/gemini';
-import { ANALYSIS_PROMPT } from '../lib/ai/prompt';
-import { parseAnalysisResponse } from '../lib/ai/parser';
-import { validateBase64Image } from '../lib/validation/image';
-import { logger } from '../lib/logger/logger';
-import { ErrorCode, AppError } from '../lib/utils/errors';
-import { sendError, sendJson } from '../lib/utils/response';
+import { geminiClient } from '../lib/ai/gemini.js';
+import { ANALYSIS_PROMPT } from '../lib/ai/prompt.js';
+import { parseAnalysisResponse } from '../lib/ai/parser.js';
+import { validateBase64Image } from '../lib/validation/image.js';
+import { logger } from '../lib/logger/logger.js';
+import { ErrorCode, AppError } from '../lib/utils/errors.js';
+import { sendError, sendJson } from '../lib/utils/response.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const requestId = Math.random().toString(36).substring(7);

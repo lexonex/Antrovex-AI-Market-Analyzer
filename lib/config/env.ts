@@ -1,7 +1,7 @@
 /**
  * Environment variable configuration
  */
-import { AI_CONFIG } from './ai';
+import { AI_CONFIG } from './ai.js';
 
 export const config = {
   gemini: {

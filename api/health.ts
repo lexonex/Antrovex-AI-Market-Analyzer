@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { AI_CONFIG } from '../lib/config/ai';
+import { AI_CONFIG } from '../lib/config/ai.js';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -7,8 +7,6 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   res.status(200).json({
-    status: "ok",
-    model: AI_CONFIG.MODEL,
-    timestamp: new Date().toISOString()
+    status: "ok"
   });
 }

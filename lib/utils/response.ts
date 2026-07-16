@@ -3,7 +3,7 @@
  */
 
 import { VercelResponse } from '@vercel/node';
-import { ErrorCode } from './errors';
+import { ErrorCode } from './errors.js';
 
 export const sendJson = (res: VercelResponse, status: number, data: any) => {
   res.status(status).json(data);

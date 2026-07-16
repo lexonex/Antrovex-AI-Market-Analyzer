@@ -2,8 +2,8 @@
  * Image validation utility
  */
 
-import { AI_CONFIG } from '../config/ai';
-import { AppError, ErrorCode } from '../utils/errors';
+import { AI_CONFIG } from '../config/ai.js';
+import { AppError, ErrorCode } from '../utils/errors.js';
 
 export const validateBase64Image = (base64String: string) => {
   if (!base64String) {

@@ -3,10 +3,10 @@
  */
 
 import { GoogleGenAI } from "@google/genai";
-import { config } from "../config/env";
-import { AI_CONFIG } from "../config/ai";
-import { logger } from "../logger/logger";
-import { AppError, ErrorCode } from "../utils/errors";
+import { config } from "../config/env.js";
+import { AI_CONFIG } from "../config/ai.js";
+import { logger } from "../logger/logger.js";
+import { AppError, ErrorCode } from "../utils/errors.js";
 
 class GeminiClient {
   private static instance: GeminiClient;
