@@ -4,6 +4,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { config } from "../config/env";
+import { AI_CONFIG } from "../config/ai";
 import { logger } from "../logger/logger";
 import { AppError, ErrorCode } from "../utils/errors";
 
@@ -42,7 +43,7 @@ class GeminiClient {
     
     try {
       const result = await client.models.generateContent({
-        model: "gemini-1.5-flash", // Using 1.5-flash as it's the stable vision model
+        model: AI_CONFIG.MODEL,
         contents: [
           {
             parts: [

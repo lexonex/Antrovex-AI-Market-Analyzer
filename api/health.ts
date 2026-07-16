@@ -1,4 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
+import { AI_CONFIG } from '../lib/config/ai';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -7,7 +8,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   res.status(200).json({
     status: "ok",
-    model: "gemini-1.5-flash",
+    model: AI_CONFIG.MODEL,
     timestamp: new Date().toISOString()
   });
 }

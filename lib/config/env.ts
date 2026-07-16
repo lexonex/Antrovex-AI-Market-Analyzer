@@ -1,11 +1,12 @@
 /**
  * Environment variable configuration
  */
+import { AI_CONFIG } from './ai';
 
 export const config = {
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '',
-    model: 'gemini-1.5-flash', // Using 1.5-flash as the reliable base, will support 2.0/3.5 in lib/ai/gemini.ts
+    model: AI_CONFIG.MODEL,
   },
   app: {
     url: process.env.APP_URL || 'http://localhost:3000',
