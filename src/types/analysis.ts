@@ -4,22 +4,17 @@
 
 export interface AnalysisResult {
   validChart: boolean;
-  prediction: 'UP' | 'DOWN' | 'NEUTRAL';
+  signal: 'UP' | 'DOWN';
   confidence: number;
-  primaryScenario: string;
-  alternativeScenario: string;
-  risk: 'Low' | 'Medium' | 'High';
-  reason: string;
+  timeframe: string;
+  expiry: string;
   analysis: {
-    trend: string[];
-    marketStructure: string[];
-    support: string[];
-    resistance: string[];
-    liquidity: string[];
-    orderBlocks: string[];
-    fvg: string[];
-    patterns: string[];
-    momentum: string[];
-    volume: string[];
+    trend: string;
+    support: string;
+    resistance: string;
+    candlestickPattern: string;
+    momentum: string;
+    marketCondition: string;
   };
+  reason: string;
 }

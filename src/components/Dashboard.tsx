@@ -228,9 +228,9 @@ export function Dashboard() {
               <h3 className="text-[10px] font-black text-black/40 uppercase tracking-[0.25em]">System_Parameters</h3>
             </div>
             <div className="space-y-4 font-mono">
-              <SpecRow label="CO_PROCESSOR" value="GEMINI_3.1_PRO" />
-              <SpecRow label="DATA_STREAM" value="BINARY_OPT_LIVE" />
-              <SpecRow label="THREAD_MAP" value="H_QUANTUM_M3" />
+              <SpecRow label="ANALYSIS_TF" value="1M_PRECISION" />
+              <SpecRow label="SIGNAL_PROTOCOL" value="BINARY_3M_EXP" />
+              <SpecRow label="DATA_STREAM" value="LIVE_TELEMETRY" />
               <SpecRow label="SEC_LAYER" value="AES_HUD_SECURE" />
             </div>
           </div>
@@ -254,10 +254,10 @@ export function Dashboard() {
                     <Target className="text-black/5 relative z-10" size={64} strokeWidth={0.5} />
                   </div>
                 </div>
-                <h3 className="text-[13px] font-black text-black uppercase tracking-[0.5em] mb-6">Awaiting_Data_Packet</h3>
+                <h3 className="text-[13px] font-black text-black uppercase tracking-[0.5em] mb-6">Awaiting_Market_Feed</h3>
                 <div className="w-20 h-px bg-orange-500/20 mb-6" />
                 <p className="text-[11px] font-mono text-black/30 max-w-sm mx-auto leading-loose uppercase tracking-[0.2em]">
-                  Synchronize visual market telemetry to initiate predictive analysis.
+                  Initialize 1M chart telemetry to generate 3M execution signals.
                 </p>
               </motion.div>
             ) : (
@@ -271,7 +271,7 @@ export function Dashboard() {
                 <div className="hud-glass p-12 hud-border relative overflow-hidden bg-white shadow-2xl">
                   <div className={cn(
                     "absolute -top-32 -right-32 w-80 h-80 blur-[140px] transition-colors duration-1000",
-                    result.prediction === 'UP' ? "bg-emerald-500/10" : "bg-red-500/10"
+                    result.signal === 'UP' ? "bg-emerald-500/10" : "bg-red-500/10"
                   )} />
                   
                   <div className="relative z-10">
@@ -280,23 +280,21 @@ export function Dashboard() {
                         <div className="flex items-center gap-2">
                           <div className={cn(
                             "w-2 h-2 rounded-full animate-pulse",
-                            result.prediction === 'UP' ? "bg-emerald-500" : 
-                            result.prediction === 'DOWN' ? "bg-red-500" : "bg-orange-500"
+                            result.signal === 'UP' ? "bg-emerald-500" : "bg-red-500"
                           )} />
                           <span className={cn(
                             "text-[10px] font-black uppercase tracking-[0.3em]",
-                            result.prediction === 'UP' ? "text-emerald-600" : 
-                            result.prediction === 'DOWN' ? "text-red-600" : "text-orange-600"
-                          )}>Prediction_Locked</span>
+                            result.signal === 'UP' ? "text-emerald-600" : "text-red-600"
+                          )}>Execution_Signal</span>
                         </div>
                         <h2 className={cn(
-                          "text-8xl font-black italic tracking-tighter leading-none text-black"
+                          "text-9xl font-black italic tracking-tighter leading-none text-black"
                         )}>
-                          {result.prediction === 'UP' ? 'CALL' : result.prediction === 'DOWN' ? 'PUT' : 'WAIT'}
+                          {result.signal === 'UP' ? 'CALL' : 'PUT'}
                         </h2>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.3em] mb-2 block">Prob_Confidence</span>
+                        <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.3em] mb-2 block">Accuracy_Conf</span>
                         <div className="flex items-baseline justify-end gap-2">
                           <span className="text-7xl font-black tabular-nums text-black">{result.confidence}</span>
                           <span className="text-2xl font-bold text-orange-500">%</span>
@@ -305,25 +303,29 @@ export function Dashboard() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12 border-t border-black/5 pt-12">
-                       <MetricList title="Detected_Visual_Patterns" items={result.analysis.patterns} />
-                       <MetricList title="Market_Trend_Vector" items={result.analysis.trend} />
+                       <MetricValue title="Detected_Pattern" value={result.analysis.candlestickPattern} />
+                       <MetricValue title="Trend_Vector" value={result.analysis.trend} />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 border-t border-black/5 pt-8">
-                       <div className="space-y-2">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Primary_Scenario</span>
-                         <p className="text-[11px] font-mono font-bold text-black/80">{result.primaryScenario}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 border-t border-black/5 pt-8 font-mono">
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Timeframe</span>
+                         <p className="text-[11px] font-bold text-black/80">{result.timeframe}</p>
                        </div>
-                       <div className="space-y-2">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Alternative_Scenario</span>
-                         <p className="text-[11px] font-mono font-bold text-black/80">{result.alternativeScenario}</p>
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Expiry_Period</span>
+                         <p className="text-[11px] font-bold text-black/80">{result.expiry}</p>
+                       </div>
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Market_Status</span>
+                         <p className="text-[11px] font-bold text-black/80">{result.analysis.marketCondition}</p>
                        </div>
                     </div>
 
                     <div className="p-6 bg-black/[0.01] border-l-4 border-orange-500 rounded-r-lg">
                       <div className="flex items-center gap-2 mb-3">
                         <Scan size={14} className="text-orange-500" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-black/40">Neural_Log_Entry</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-black/40">Technical_Reasoning</span>
                       </div>
                       <p className="text-[12px] font-mono text-black/70 leading-relaxed italic">
                         "{result.reason}"
@@ -342,14 +344,10 @@ export function Dashboard() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
-                    <SpecCard label="RISK_LEVEL" value={result.risk} />
-                    <SpecCard label="MARKET_STRUCT" items={result.analysis.marketStructure} />
-                    <SpecCard label="ORDER_BLOCKS" items={result.analysis.orderBlocks} />
-                    <SpecCard label="LIQUIDITY" items={result.analysis.liquidity} />
-                    <SpecCard label="SUPPORT" items={result.analysis.support} />
-                    <SpecCard label="RESISTANCE" items={result.analysis.resistance} />
-                    <SpecCard label="MOMENTUM" items={result.analysis.momentum} />
-                    <SpecCard label="FVG" items={result.analysis.fvg} />
+                    <SpecCard label="SUPPORT_ZONE" value={result.analysis.support} />
+                    <SpecCard label="RESISTANCE_ZONE" value={result.analysis.resistance} />
+                    <SpecCard label="MOMENTUM" value={result.analysis.momentum} />
+                    <SpecCard label="CONDITION" value={result.analysis.marketCondition} />
                   </div>
                 </div>
               </motion.div>
@@ -361,17 +359,11 @@ export function Dashboard() {
   );
 }
 
-function SpecCard({ label, value, items }: { label: string, value?: string, items?: string[] }) {
+function SpecCard({ label, value }: { label: string, value: string }) {
   return (
     <div className="p-5 bg-white border border-black/5 group hover:border-orange-500/20 transition-all hover:shadow-md rounded">
       <p className="text-[9px] font-black text-black/20 uppercase mb-3 truncate tracking-tighter group-hover:text-orange-500/40 transition-colors">{label}</p>
-      {value ? (
-        <p className="text-[11px] font-bold text-black/80">{value}</p>
-      ) : items && items.length > 0 ? (
-        <p className="text-[10px] font-bold text-black/70 leading-tight line-clamp-2">{items[0]}</p>
-      ) : (
-        <p className="text-[10px] font-bold text-black/20 italic">No Data</p>
-      )}
+      <p className="text-[11px] font-bold text-black/80 line-clamp-2">{value}</p>
     </div>
   );
 }
@@ -385,17 +377,13 @@ function SpecRow({ label, value }: { label: string, value: string }) {
   );
 }
 
-function MetricList({ title, items }: { title: string, items: string[] }) {
+function MetricValue({ title, value }: { title: string, value: string }) {
   return (
     <div className="flex flex-col gap-4">
       <h4 className="text-[9px] font-black text-black/20 uppercase tracking-[0.2em]">{title}</h4>
-      <div className="space-y-3">
-        {items.map((item, i) => (
-          <div key={i} className="flex gap-3 items-start group">
-            <ChevronRight size={10} className="mt-0.5 text-orange-500/40 group-hover:text-orange-500 transition-colors" />
-            <p className="text-[10px] font-bold text-black/60 leading-tight uppercase tracking-tight">{item}</p>
-          </div>
-        ))}
+      <div className="flex gap-3 items-start group">
+        <ChevronRight size={10} className="mt-0.5 text-orange-500/40 group-hover:text-orange-500 transition-colors" />
+        <p className="text-[12px] font-bold text-black/80 uppercase tracking-tight">{value}</p>
       </div>
     </div>
   );

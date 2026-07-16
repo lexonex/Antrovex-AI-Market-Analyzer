@@ -13,51 +13,40 @@ export const parseAnalysisResponse = (jsonString: string): AnalysisResult => {
     
     // Ensure essential fields exist
     if (parsed.validChart === false) {
-      // Return a default structure for invalid chart to satisfy TS, though UI handles it
       return { 
         validChart: false,
-        prediction: 'NEUTRAL',
+        signal: 'UP',
         confidence: 0,
-        primaryScenario: 'N/A',
-        alternativeScenario: 'N/A',
-        risk: 'Low',
-        reason: 'The provided image is not recognized as a trading chart.',
+        timeframe: '1M',
+        expiry: '3M',
         analysis: {
-          trend: [],
-          marketStructure: [],
-          support: [],
-          resistance: [],
-          liquidity: [],
-          orderBlocks: [],
-          fvg: [],
-          patterns: [],
-          momentum: [],
-          volume: []
-        }
+          trend: 'N/A',
+          support: 'N/A',
+          resistance: 'N/A',
+          candlestickPattern: 'N/A',
+          momentum: 'N/A',
+          marketCondition: 'N/A'
+        },
+        reason: 'The provided image is not recognized as a trading chart.'
       };
     }
 
     // Map and sanitize fields
     return {
       validChart: parsed.validChart ?? true,
-      prediction: parsed.prediction || 'NEUTRAL',
+      signal: parsed.signal || 'UP',
       confidence: parsed.confidence || 0,
-      primaryScenario: parsed.primaryScenario || 'N/A',
-      alternativeScenario: parsed.alternativeScenario || 'N/A',
-      risk: parsed.risk || 'Medium',
-      reason: parsed.reason || 'No reasoning provided.',
+      timeframe: parsed.timeframe || '1M',
+      expiry: parsed.expiry || '3M',
       analysis: {
-        trend: parsed.analysis?.trend || [],
-        marketStructure: parsed.analysis?.marketStructure || [],
-        support: parsed.analysis?.support || [],
-        resistance: parsed.analysis?.resistance || [],
-        liquidity: parsed.analysis?.liquidity || [],
-        orderBlocks: parsed.analysis?.orderBlocks || [],
-        fvg: parsed.analysis?.fvg || [],
-        patterns: parsed.analysis?.patterns || [],
-        momentum: parsed.analysis?.momentum || [],
-        volume: parsed.analysis?.volume || []
-      }
+        trend: parsed.analysis?.trend || 'N/A',
+        support: parsed.analysis?.support || 'N/A',
+        resistance: parsed.analysis?.resistance || 'N/A',
+        candlestickPattern: parsed.analysis?.candlestickPattern || 'N/A',
+        momentum: parsed.analysis?.momentum || 'N/A',
+        marketCondition: parsed.analysis?.marketCondition || 'N/A'
+      },
+      reason: parsed.reason || 'No reasoning provided.'
     };
   } catch (error) {
     logger.error("Failed to parse AI response", error, { rawResponse: jsonString });
