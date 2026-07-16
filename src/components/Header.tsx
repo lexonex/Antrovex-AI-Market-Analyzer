@@ -20,7 +20,7 @@ export default function Header() {
       <div className="flex items-center gap-6">
         <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-green-500/10 rounded-full border border-green-500/20">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-[10px] uppercase font-bold text-green-400 tracking-wider">System: gemini-2.5-flash</span>
+          <span className="text-[10px] uppercase font-bold text-green-400 tracking-wider">System: gemini-3.5-flash</span>
         </div>
         <nav className="flex gap-6 text-sm text-slate-400 font-medium">
           <a href="#" className="text-white hover:text-blue-400 transition-colors">Analyzer</a>

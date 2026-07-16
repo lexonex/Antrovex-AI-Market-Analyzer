@@ -3,7 +3,7 @@
  */
 
 export const AI_CONFIG = {
-  MODEL: 'gemini-2.5-pro', // Latest high-performance model
+  MODEL: 'gemini-3.5-flash', // Latest high-performance model
   MAX_IMAGE_SIZE_MB: 4,
   MAX_IMAGE_SIZE_BYTES: 4 * 1024 * 1024,
   SUPPORTED_MIME_TYPES: ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'],
