@@ -2,8 +2,8 @@
  * Frontend API Service
  */
 
-import { AnalyzeChartRequest } from '../../types/api';
-import { AnalysisResult } from '../../types/analysis';
+import { AnalyzeChartRequest } from '../types/api';
+import { AnalysisResult } from '../types/analysis';
 
 export const apiService = {
   analyzeChart: async (data: AnalyzeChartRequest): Promise<AnalysisResult> => {

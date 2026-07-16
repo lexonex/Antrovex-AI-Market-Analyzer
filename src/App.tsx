@@ -4,7 +4,7 @@ import Header from './components/Header';
 import UploadZone from './components/UploadZone';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import { apiService } from './services/api';
-import { AnalysisResult } from '../types/analysis';
+import { AnalysisResult } from './types/analysis';
 import { AlertCircle, LineChart, ShieldAlert } from 'lucide-react';
 
 export default function App() {

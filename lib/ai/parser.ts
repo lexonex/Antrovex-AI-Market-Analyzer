@@ -2,7 +2,7 @@
  * AI Response Parser
  */
 
-import { AnalysisResult } from "../../types/analysis";
+import { AnalysisResult } from "../../src/types/analysis";
 import { logger } from "../logger/logger";
 
 export const parseAnalysisResponse = (jsonString: string): AnalysisResult => {

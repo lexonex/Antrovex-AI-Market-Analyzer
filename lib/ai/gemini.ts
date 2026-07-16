@@ -39,31 +39,29 @@ class GeminiClient {
   }
 
   public async analyzeChart(imageBase64: string, prompt: string): Promise<string> {
-    const client = this.getClient();
+    const ai = this.getClient();
     
     try {
-      const result = await client.models.generateContent({
+      const response = await ai.models.generateContent({
         model: AI_CONFIG.MODEL,
-        contents: [
-          {
-            parts: [
-              { text: prompt },
-              {
-                inlineData: {
-                  mimeType: "image/jpeg",
-                  data: imageBase64
-                }
+        contents: {
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: imageBase64
               }
-            ]
-          }
-        ],
+            }
+          ]
+        },
         config: {
-          responseMimeType: "application/json",
           temperature: 0.2,
+          responseMimeType: "application/json",
         }
       });
 
-      const responseText = result.text;
+      const responseText = response.text;
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }

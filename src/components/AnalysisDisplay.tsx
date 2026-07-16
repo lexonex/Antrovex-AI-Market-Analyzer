@@ -3,7 +3,7 @@ import {
   TrendingUp, TrendingDown, Minus, 
   AlertTriangle, Download, Copy
 } from 'lucide-react';
-import { AnalysisResult } from '../../types/analysis';
+import { AnalysisResult } from '../types/analysis';
 import { cn } from '../lib/utils';
 
 interface AnalysisDisplayProps {
@@ -95,12 +95,12 @@ export default function AnalysisDisplay({ data }: AnalysisDisplayProps) {
           <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em]">Market Structure</h3>
             <div className="flex flex-wrap gap-2">
-              {data.analysis?.marketStructure.slice(0, 3).map((item, i) => (
+              {data.analysis?.marketStructure?.slice(0, 3).map((item, i) => (
                 <span key={i} className="bg-blue-500/10 text-blue-300 text-[9px] font-bold px-2 py-1 rounded border border-blue-500/20 uppercase">
                   {item}
                 </span>
               ))}
-              {data.analysis?.trend.slice(0, 1).map((item, i) => (
+              {data.analysis?.trend?.slice(0, 1).map((item, i) => (
                 <span key={i} className="bg-purple-500/10 text-purple-300 text-[9px] font-bold px-2 py-1 rounded border border-purple-500/20 uppercase">
                   {item}
                 </span>
@@ -121,7 +121,7 @@ export default function AnalysisDisplay({ data }: AnalysisDisplayProps) {
             <div className="bg-[#1F2329] p-4 rounded-lg border border-white/5">
               <span className="text-[9px] text-slate-500 font-bold block mb-2 uppercase tracking-widest">Support</span>
               <ul className="text-[11px] font-mono text-green-400 space-y-1.5">
-                {data.analysis?.support.slice(0, 2).map((s, i) => (
+                {data.analysis?.support?.slice(0, 2).map((s, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <div className="w-1 h-1 bg-green-500 rounded-full"></div>
                     {s}
@@ -132,7 +132,7 @@ export default function AnalysisDisplay({ data }: AnalysisDisplayProps) {
             <div className="bg-[#1F2329] p-4 rounded-lg border border-white/5">
               <span className="text-[9px] text-slate-500 font-bold block mb-2 uppercase tracking-widest">Resistance</span>
               <ul className="text-[11px] font-mono text-red-400 space-y-1.5">
-                {data.analysis?.resistance.slice(0, 2).map((r, i) => (
+                {data.analysis?.resistance?.slice(0, 2).map((r, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <div className="w-1 h-1 bg-red-500 rounded-full"></div>
                     {r}

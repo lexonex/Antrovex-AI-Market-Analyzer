@@ -1,6 +1,8 @@
 import http from 'http';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import sirv from 'sirv';
+import compression from 'compression';
 
 // Import our handlers
 // Note: We'll use dynamic imports or static ones. Static is better for bundling.
@@ -12,8 +14,16 @@ const PORT = 3000;
 async function start() {
   const isProduction = process.env.NODE_ENV === 'production';
   let vite: any;
+  let assets: any;
+  let compress: any;
 
-  if (!isProduction) {
+  if (isProduction) {
+    assets = sirv(path.join(process.cwd(), 'dist'), {
+      single: true,
+      dev: false
+    });
+    compress = compression();
+  } else {
     vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -67,11 +77,9 @@ async function start() {
 
     // 2. Serve static files in production or use Vite in development
     if (isProduction) {
-      // In a real production build, we'd serve from dist. 
-      // This is handled by Vercel automatically for the frontend,
-      // but for our local runner we'll keep it simple.
-      res.statusCode = 404;
-      res.end('Production static serving not implemented in local runner');
+      compress(req as any, res as any, () => {
+        assets(req, res);
+      });
     } else {
       vite.middlewares(req, res);
     }
