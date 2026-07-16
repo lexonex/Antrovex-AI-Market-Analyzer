@@ -42,26 +42,25 @@ class GeminiClient {
     const ai = this.getClient();
     
     try {
-      const response = await ai.models.generateContent({
+      const interaction = await ai.interactions.create({
         model: AI_CONFIG.MODEL,
-        contents: {
-          parts: [
-            { text: prompt },
-            {
-              inlineData: {
-                mimeType: "image/jpeg",
-                data: imageBase64
-              }
-            }
-          ]
-        },
-        config: {
+        input: [
+          {
+            type: "text",
+            text: prompt
+          },
+          {
+            type: "image",
+            data: imageBase64,
+            mime_type: "image/jpeg"
+          }
+        ],
+        generation_config: {
           temperature: 0.2,
-          responseMimeType: "application/json",
         }
       });
 
-      const responseText = response.text;
+      const responseText = interaction.output_text;
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
