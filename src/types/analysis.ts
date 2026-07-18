@@ -60,3 +60,13 @@ export interface AnalysisResult {
   };
   audit: string[];
 }
+
+export type TradeOutcome = 'PROFIT' | 'LOSS' | 'SKIPPED';
+
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  result: AnalysisResult;
+  preview: string;
+  outcome: TradeOutcome;
+}

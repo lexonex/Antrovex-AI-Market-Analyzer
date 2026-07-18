@@ -17,7 +17,7 @@ export default function SecurityGate({ onUnlock }: SecurityGateProps) {
     
     // Artificial delay for "Security Processing" vibe
     setTimeout(() => {
-      if (password === 'Y0200') {
+      if (password === '1212') {
         onUnlock();
       } else {
         setError(true);

@@ -59,7 +59,54 @@ export class AIService {
       throw new Error("Empty response from Gemini");
     }
     
-    return JSON.parse(text);
+    try {
+      // Direct parse attempt
+      return JSON.parse(text.trim());
+    } catch (e) {
+      // Robust extraction fallback
+      const cleaned = this.extractJson(text);
+      try {
+        return JSON.parse(cleaned);
+      } catch (innerE) {
+        console.error("AIService: Failed to parse JSON even after cleaning", {
+          error: innerE,
+          text: text.substring(0, 500) + "..."
+        });
+        throw new Error(`Invalid JSON response from AI: ${innerE instanceof Error ? innerE.message : String(innerE)}`);
+      }
+    }
+  }
+
+  private extractJson(text: string): string {
+    // 1. Try markdown code block extraction
+    const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch && markdownMatch[1]) {
+      return markdownMatch[1].trim();
+    }
+
+    // 2. Find the first '{' or '[' and matching last '}' or ']'
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    const firstBracket = text.indexOf('[');
+    const lastBracket = text.lastIndexOf(']');
+
+    let start = -1;
+    let end = -1;
+
+    // Determine which structure starts first and ends last
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+      start = firstBrace;
+      end = lastBrace;
+    } else if (firstBracket !== -1) {
+      start = firstBracket;
+      end = lastBracket;
+    }
+
+    if (start !== -1 && end !== -1 && end > start) {
+      return text.substring(start, end + 1).trim();
+    }
+
+    return text.trim();
   }
 }
 

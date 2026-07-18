@@ -35,19 +35,10 @@ export default function App() {
         <div className="flex gap-6 text-[9px] text-black/40 font-mono uppercase tracking-[0.2em]">
           <span className="flex items-center gap-2">
             <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse"></div>
-            System: Active_Link_M3
+            System: Active_Link_V7.2
           </span>
           <span className="hidden md:inline">Protocol: Secure_JSON_HTTPS</span>
           <span className="hidden md:inline">Node: Global_Edge_A1</span>
-          <button 
-            onClick={() => {
-              sessionStorage.removeItem('antrovex_auth');
-              setIsAuthenticated(false);
-            }}
-            className="hidden md:inline hover:text-black transition-colors border-l border-black/5 pl-6"
-          >
-            Terminal: Logout
-          </button>
         </div>
         <div className="text-[9px] text-black/20 uppercase font-black tracking-[0.3em]">
           Antrovex_HUD • © 2026

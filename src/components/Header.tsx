@@ -1,35 +1,88 @@
 import { motion } from 'motion/react';
+import React, { useState } from 'react';
+import { LayoutDashboard, History, Terminal, LogOut } from 'lucide-react';
 
 export default function Header() {
+  const [active, setActive] = useState<'analyzer' | 'history'>('analyzer');
+
+  const handleNavigate = (view: 'analyzer' | 'history') => {
+    setActive(view);
+    window.dispatchEvent(new CustomEvent('antrovex-view-change', { detail: view }));
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('antrovex_auth');
+    window.location.reload();
+  };
+
   return (
-    <header className="h-16 border-b border-black/5 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md relative z-50">
-      <div className="flex items-center gap-3">
+    <header className="h-20 border-b border-black/5 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md relative z-50 shadow-sm">
+      <div className="flex items-center gap-4">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center font-black text-white shadow-xl shadow-orange-500/20 italic"
+          whileHover={{ scale: 1.05 }}
+          className="w-12 h-12 bg-black rounded-xl flex items-center justify-center font-black text-white shadow-xl italic relative group overflow-hidden"
         >
-          AX
+          <div className="absolute inset-0 bg-orange-500 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+          <span className="relative z-10 text-xl">AX</span>
         </motion.div>
-        <div className="flex flex-col -gap-1">
-          <span className="text-[14px] font-black tracking-[0.2em] text-black uppercase leading-none">
-            ANTROVEX_<span className="text-orange-500">PRO</span>
+        <div className="flex flex-col">
+          <span className="text-[16px] font-black tracking-[0.25em] text-black uppercase leading-none">
+            ANTROVEX_<span className="text-orange-500">SYSTEMS</span>
           </span>
-          <span className="text-[8px] font-mono font-bold text-black/20 uppercase tracking-[0.4em]">Market_Intelligence_OS</span>
+          <span className="text-[8px] font-mono font-bold text-black/30 uppercase tracking-[0.5em] mt-1">Intelligence_Core_V7.2</span>
         </div>
       </div>
       
-      <div className="flex items-center gap-8">
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-orange-500/5 rounded border border-orange-500/10">
-          <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-          <span className="text-[9px] uppercase font-black text-orange-600/60 tracking-widest font-mono">Core: gemini-3.1-pro-preview</span>
+      <nav className="flex items-center gap-1 bg-black/[0.03] p-1 rounded-xl border border-black/5">
+        <NavButton 
+          active={active === 'analyzer'} 
+          onClick={() => handleNavigate('analyzer')}
+          icon={<LayoutDashboard size={14} />}
+          label="Analyzer"
+        />
+        <NavButton 
+          active={active === 'history'} 
+          onClick={() => handleNavigate('history')}
+          icon={<History size={14} />}
+          label="History"
+        />
+        <div className="w-px h-4 bg-black/10 mx-2" />
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-red-500/60 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+        >
+          <LogOut size={14} />
+          <span className="hidden md:inline">Exit</span>
+        </button>
+      </nav>
+
+      <div className="hidden xl:flex items-center gap-6">
+        <div className="flex flex-col items-end">
+          <span className="text-[9px] font-mono font-bold text-black/20 uppercase tracking-widest">Network_Status</span>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-black text-black/60 uppercase tracking-widest font-mono">Secure_Link: Active</span>
+          </div>
         </div>
-        <nav className="flex gap-8 text-[10px] text-black/40 font-black uppercase tracking-[0.2em]">
-          <a href="#" className="text-black border-b-2 border-orange-500 pb-1">Analyzer</a>
-          <a href="#" className="hover:text-orange-500 transition-colors">History</a>
-          <a href="#" className="hover:text-orange-500 transition-colors">Terminal</a>
-        </nav>
       </div>
     </header>
+  );
+}
+
+function NavButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`
+        flex items-center gap-2 px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all
+        ${active 
+          ? 'bg-white text-black shadow-sm ring-1 ring-black/5' 
+          : 'text-black/40 hover:text-black hover:bg-white/50'
+        }
+      `}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }
