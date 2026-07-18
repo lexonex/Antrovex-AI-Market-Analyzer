@@ -3,10 +3,9 @@
  * Responsible for JSON structure and data integrity
  */
 export const OutputEngine = `
-### OUTPUT ENGINE v7
+### OUTPUT ENGINE v5
 - Format: Return ONLY raw, valid JSON. No markdown, no pre/post-amble.
 - Integrity: Ensure all numeric fields are within 0-100 range.
-- Rule: Do not leave fields as null or 0 if validChart is true. Provide your best estimates based on visual evidence.
 - Schema: 
 {
   "validChart": boolean,
@@ -36,8 +35,6 @@ export const OutputEngine = `
   "bullishEvidenceCount": number,
   "bearishEvidenceCount": number,
   "contradictionScore": number,
-  "riskLevel": "Low" | "Medium" | "High" | "Extreme",
-  "executionRisk": "string",
   "selfValidationPassed": boolean,
   "decisionFilter": "string",
   "noTradeReason": "string (only if NO_TRADE)",

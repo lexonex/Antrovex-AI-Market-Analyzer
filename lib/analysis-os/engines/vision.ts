@@ -3,12 +3,10 @@
  * Responsible for image loading, validation, and quality detection
  */
 export const VisionEngine = `
-### VISION ENGINE v7
+### VISION ENGINE v6
 - Load input image and perform initial integrity check.
-- Detect screenshot quality: Check for blur and visibility.
-- Identify chart characteristics: Differentiate between a trading chart (Quotex OTC, etc.) and other images.
-- MANDATORY: If candles (red/green bars) are visible, set validChart: true.
-- MANDATORY: Do not reject charts just because they are from a mobile device or have minor UI overlays.
-- MANDATORY: If price action is visible, set imageQualityScore to at least 70.
+- Detect screenshot quality: Check for blur, resolution issues, and brightness.
+- Identify chart boundaries: Ensure both price and time axes are visible.
+- Verify candle visibility: Confirm that individual 1M candles are distinguishable.
 - Output: imageQualityScore (0-100) and validation status.
 `;
