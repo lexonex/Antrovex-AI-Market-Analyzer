@@ -20,6 +20,7 @@ ${JSON.stringify(state, null, 2)}
 {
   "signal": "${state.decision.finalSignal}",
   "confidence": ${state.decision.decisionConfidence},
+  "recommendedExpiry": "X-Minutes (e.g. 5M, 7M, 10M, 15M) - Choose the most stable duration based on technical setup",
   "reason": "Short summary of why this decision was made",
   "analysis": "Detailed technical reasoning paragraphs",
   "institutionalBias": "${state.market.institutionalBias}"

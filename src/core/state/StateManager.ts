@@ -103,6 +103,7 @@ export class StateManager {
         decisionConfidence: 0,
         decisionReason: 'System initialized.',
         decisionType: 'Automated',
+        recommendedExpiry: 'Wait',
         executionApproval: false,
         rejectionReason: 'Initial state.',
         decisionSummary: '',

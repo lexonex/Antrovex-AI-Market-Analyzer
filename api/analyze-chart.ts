@@ -57,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       neutralProbability: Math.round(state.probability.neutralProbability * 100),
       signalQuality: state.decision.finalSignal === 'NO_TRADE' ? 'Weak' : 'Excellent',
       timeframe: state.session.timeframe,
-      expiry: '3M',
+      expiry: state.decision.recommendedExpiry || '3M',
       marketRegime: state.market.regime.type,
       trendStrength: `${state.market.trend.strength}%`,
       structure: state.market.structure.type,

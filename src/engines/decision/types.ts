@@ -13,6 +13,7 @@ export interface DecisionState {
   decisionConfidence: number;
   decisionReason: string;
   decisionType: string;
+  recommendedExpiry?: string; // e.g. "5M", "10M"
   executionApproval: boolean;
   rejectionReason: string;
   decisionSummary: string;

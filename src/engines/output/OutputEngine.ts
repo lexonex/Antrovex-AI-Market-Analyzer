@@ -18,6 +18,7 @@ export class OutputEngine {
       
       state.decision.decisionReason = reasoningData.reason;
       state.decision.decisionSummary = reasoningData.analysis;
+      state.decision.recommendedExpiry = reasoningData.recommendedExpiry;
       state.output.finalJson = JSON.stringify(reasoningData);
     } catch (error) {
       // Fallback if AI reasoning fails
