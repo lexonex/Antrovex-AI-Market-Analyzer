@@ -6,6 +6,9 @@ export interface AnalysisResult {
   validChart: boolean;
   signal: 'UP' | 'DOWN' | 'NO_TRADE';
   confidence: number;
+  bullishProbability: number;
+  bearishProbability: number;
+  neutralProbability: number;
   signalQuality: 'Excellent' | 'Good' | 'Average' | 'Weak';
   timeframe: string;
   expiry: string;
@@ -27,6 +30,7 @@ export interface AnalysisResult {
   bullishEvidenceCount: number;
   bearishEvidenceCount: number;
   contradictionScore: number;
+  selfValidationPassed: boolean;
   decisionFilter: string;
   noTradeReason?: string;
   analysis: {

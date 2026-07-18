@@ -320,6 +320,48 @@ export function Dashboard() {
                        <MetricValue title="Institutional_Structure" value={result.structure} />
                     </div>
 
+                    {/* Probability Engine Output */}
+                    <div className="mb-12 border-t border-black/5 pt-8">
+                       <div className="flex items-center justify-between mb-4">
+                         <h4 className="text-[9px] font-black text-black/20 uppercase tracking-[0.2em]">Probability_Engine_Output</h4>
+                         <div className={cn(
+                           "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter",
+                           result.selfValidationPassed ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
+                         )}>
+                           {result.selfValidationPassed ? 'Self_Validation: Passed' : 'Self_Validation: Failed'}
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-3 gap-4 font-mono">
+                         <div className="space-y-2">
+                           <div className="flex justify-between text-[10px] font-bold">
+                             <span className="text-emerald-600">BULLISH</span>
+                             <span>{result.bullishProbability}%</span>
+                           </div>
+                           <div className="h-1 bg-black/5 rounded-full overflow-hidden">
+                             <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${result.bullishProbability}%` }} />
+                           </div>
+                         </div>
+                         <div className="space-y-2">
+                           <div className="flex justify-between text-[10px] font-bold">
+                             <span className="text-red-600">BEARISH</span>
+                             <span>{result.bearishProbability}%</span>
+                           </div>
+                           <div className="h-1 bg-black/5 rounded-full overflow-hidden">
+                             <div className="h-full bg-red-500 transition-all duration-1000" style={{ width: `${result.bearishProbability}%` }} />
+                           </div>
+                         </div>
+                         <div className="space-y-2">
+                           <div className="flex justify-between text-[10px] font-bold">
+                             <span className="text-black/40">NEUTRAL</span>
+                             <span>{result.neutralProbability}%</span>
+                           </div>
+                           <div className="h-1 bg-black/5 rounded-full overflow-hidden">
+                             <div className="h-full bg-black/20 transition-all duration-1000" style={{ width: `${result.neutralProbability}%` }} />
+                           </div>
+                         </div>
+                       </div>
+                    </div>
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 border-t border-black/5 pt-8 font-mono text-center">
                        <div className="space-y-1">
                          <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Img_Quality</span>
