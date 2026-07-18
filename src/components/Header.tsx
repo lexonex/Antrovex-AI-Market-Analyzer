@@ -22,7 +22,7 @@ export default function Header() {
       <div className="flex items-center gap-8">
         <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-orange-500/5 rounded border border-orange-500/10">
           <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-          <span className="text-[9px] uppercase font-black text-orange-600/60 tracking-widest font-mono">Core: gemini-3.1-pro-preview</span>
+          <span className="text-[9px] uppercase font-black text-orange-600/60 tracking-widest font-mono">Core: gemini-2.5-pro</span>
         </div>
         <nav className="flex gap-8 text-[10px] text-black/40 font-black uppercase tracking-[0.2em]">
           <a href="#" className="text-black border-b-2 border-orange-500 pb-1">Analyzer</a>

@@ -230,8 +230,8 @@ export function Dashboard() {
             <div className="space-y-4 font-mono">
               <SpecRow label="ANALYSIS_TF" value="1M_PRECISION" />
               <SpecRow label="SIGNAL_PROTOCOL" value="BINARY_3M_EXP" />
+              <SpecRow label="CO_PROCESSOR" value="INST_V3_ENGINE" />
               <SpecRow label="DATA_STREAM" value="LIVE_TELEMETRY" />
-              <SpecRow label="SEC_LAYER" value="AES_HUD_SECURE" />
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ export function Dashboard() {
                 <h3 className="text-[13px] font-black text-black uppercase tracking-[0.5em] mb-6">Awaiting_Market_Feed</h3>
                 <div className="w-20 h-px bg-orange-500/20 mb-6" />
                 <p className="text-[11px] font-mono text-black/30 max-w-sm mx-auto leading-loose uppercase tracking-[0.2em]">
-                  Initialize 1M chart telemetry to generate 3M execution signals.
+                  Initialize Institutional V3 telemetry to generate 3M execution signals.
                 </p>
               </motion.div>
             ) : (
@@ -271,7 +271,8 @@ export function Dashboard() {
                 <div className="hud-glass p-12 hud-border relative overflow-hidden bg-white shadow-2xl">
                   <div className={cn(
                     "absolute -top-32 -right-32 w-80 h-80 blur-[140px] transition-colors duration-1000",
-                    result.signal === 'UP' ? "bg-emerald-500/10" : "bg-red-500/10"
+                    result.signal === 'UP' ? "bg-emerald-500/10" : 
+                    result.signal === 'DOWN' ? "bg-red-500/10" : "bg-orange-500/10"
                   )} />
                   
                   <div className="relative z-10">
@@ -280,18 +281,24 @@ export function Dashboard() {
                         <div className="flex items-center gap-2">
                           <div className={cn(
                             "w-2 h-2 rounded-full animate-pulse",
-                            result.signal === 'UP' ? "bg-emerald-500" : "bg-red-500"
+                            result.signal === 'UP' ? "bg-emerald-500" : 
+                            result.signal === 'DOWN' ? "bg-red-500" : "bg-orange-500"
                           )} />
                           <span className={cn(
                             "text-[10px] font-black uppercase tracking-[0.3em]",
-                            result.signal === 'UP' ? "text-emerald-600" : "text-red-600"
+                            result.signal === 'UP' ? "text-emerald-600" : 
+                            result.signal === 'DOWN' ? "text-red-600" : "text-orange-600"
                           )}>Execution_Signal</span>
                         </div>
                         <h2 className={cn(
                           "text-9xl font-black italic tracking-tighter leading-none text-black"
                         )}>
-                          {result.signal === 'UP' ? 'CALL' : 'PUT'}
+                          {result.signal === 'UP' ? 'CALL' : 
+                           result.signal === 'DOWN' ? 'PUT' : 'WAIT'}
                         </h2>
+                        {result.signal === 'NO_TRADE' && result.noTradeReason && (
+                          <p className="text-[10px] font-mono font-bold text-orange-600 mt-2">CAUSE: {result.noTradeReason}</p>
+                        )}
                       </div>
                       <div className="text-right">
                         <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.3em] mb-2 block">Accuracy_Conf</span>
@@ -299,26 +306,44 @@ export function Dashboard() {
                           <span className="text-7xl font-black tabular-nums text-black">{result.confidence}</span>
                           <span className="text-2xl font-bold text-orange-500">%</span>
                         </div>
+                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-black/5 rounded text-[9px] font-black uppercase tracking-widest text-black/40">
+                          Quality: <span className={cn(
+                            result.signalQuality === 'Excellent' ? "text-emerald-600" : 
+                            result.signalQuality === 'Good' ? "text-blue-600" : "text-orange-600"
+                          )}>{result.signalQuality}</span>
+                        </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12 border-t border-black/5 pt-12">
-                       <MetricValue title="Detected_Pattern" value={result.analysis.candlestickPattern} />
-                       <MetricValue title="Trend_Vector" value={result.analysis.trend} />
+                       <MetricValue title="Market_Regime" value={result.marketRegime} />
+                       <MetricValue title="Institutional_Structure" value={result.structure} />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 border-t border-black/5 pt-8 font-mono">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 border-t border-black/5 pt-8 font-mono text-center">
                        <div className="space-y-1">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Timeframe</span>
-                         <p className="text-[11px] font-bold text-black/80">{result.timeframe}</p>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Img_Quality</span>
+                         <p className={cn("text-[11px] font-bold", result.imageQualityScore > 80 ? "text-emerald-600" : "text-orange-600")}>
+                           {result.imageQualityScore}%
+                         </p>
                        </div>
                        <div className="space-y-1">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Expiry_Period</span>
-                         <p className="text-[11px] font-bold text-black/80">{result.expiry}</p>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Evidence_B/B</span>
+                         <p className="text-[11px] font-bold text-black/80">
+                           <span className="text-emerald-600">{result.bullishEvidenceCount}</span>
+                           <span className="text-black/20 mx-1">/</span>
+                           <span className="text-red-600">{result.bearishEvidenceCount}</span>
+                         </p>
                        </div>
                        <div className="space-y-1">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Market_Status</span>
-                         <p className="text-[11px] font-bold text-black/80">{result.analysis.marketCondition}</p>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Contradiction</span>
+                         <p className={cn("text-[11px] font-bold", result.contradictionScore > 30 ? "text-red-600" : "text-emerald-600")}>
+                           {result.contradictionScore}%
+                         </p>
+                       </div>
+                       <div className="space-y-1">
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Conf_Score</span>
+                         <p className="text-[11px] font-bold text-black/80">{result.confluenceScore}/100</p>
                        </div>
                     </div>
 
@@ -337,17 +362,21 @@ export function Dashboard() {
                 {/* Technical Grid */}
                 <div className="hud-glass p-8 hud-border shadow-sm bg-white/40">
                   <div className="flex items-center justify-between mb-8">
-                    <h3 className="text-[10px] font-black text-black/40 uppercase tracking-[0.3em]">Telemetry_Snapshots</h3>
+                    <h3 className="text-[10px] font-black text-black/40 uppercase tracking-[0.3em]">Institutional_Telemetry</h3>
                     <div className="flex gap-1">
                       <div className="w-8 h-1 bg-orange-500" />
                       <div className="w-4 h-1 bg-black/10" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
-                    <SpecCard label="SUPPORT_ZONE" value={result.analysis.support} />
-                    <SpecCard label="RESISTANCE_ZONE" value={result.analysis.resistance} />
-                    <SpecCard label="MOMENTUM" value={result.analysis.momentum} />
-                    <SpecCard label="CONDITION" value={result.analysis.marketCondition} />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
+                    <SpecCard label="TREND_STRENGTH" value={result.trendStrength} />
+                    <SpecCard label="LIQUIDITY_MAP" value={result.liquidityStatus} />
+                    <SpecCard label="PRICE_ACTION" value={result.priceActionState} />
+                    <SpecCard label="MOMENTUM_VE" value={result.momentumState} />
+                    <SpecCard label="SUP_STRENGTH" value={result.supportStrength} />
+                    <SpecCard label="RES_STRENGTH" value={result.resistanceStrength} />
+                    <SpecCard label="KNOWL_MATCH" value={`${result.knowledgeMatchScore}%`} />
+                    <SpecCard label="DECISION_FLT" value={result.decisionFilter} />
                   </div>
                 </div>
               </motion.div>
