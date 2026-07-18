@@ -3,19 +3,23 @@
  * Responsible for final signal determination and confluence weighting
  */
 export const DecisionEngine = `
-### DECISION ENGINE v5
+### DECISION ENGINE v7
 - Objective: Generate final signal (UP, DOWN, NO_TRADE) for a 3-candle (3M) window.
 - Confluence Weighting:
   * Price Action: 30%
   * Market Structure: 25%
   * Liquidity: 15%
   * Momentum: 10%
-  * Support/Resistance: 10%
-  * Candlestick Patterns: 5%
+  * Risk/Reward: 10%
+  * Support/Resistance: 5%
   * Knowledge Match: 5%
 - Signal Rules:
-  * UP: Bullish evidence > 75% and Bullish Probability > 70%.
-  * DOWN: Bearish evidence > 75% and Bearish Probability > 70%.
-  * NO_TRADE: If confidence < 75%, contradiction score > 30%, or trend is choppy.
-- Execution Quality: Determine if the trade setup is 'Excellent', 'Good', 'Average', or 'Weak'.
+  * UP: Bullish Probability > 65% and Contradiction Score < 35%.
+  * DOWN: Bearish Probability > 65% and Contradiction Score < 35%.
+  * NO_TRADE: If Bullish/Bearish deltas are < 20%, confidence < 60%, or Risk Engine flags 'High Execution Risk'.
+- Execution Quality: 
+  * Excellent: Confidence > 85%
+  * Good: Confidence 75-85%
+  * Average: Confidence 60-75%
+  * Weak: Confidence < 60%
 `;

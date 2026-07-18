@@ -30,6 +30,8 @@ export interface AnalysisResult {
   bullishEvidenceCount: number;
   bearishEvidenceCount: number;
   contradictionScore: number;
+  riskLevel: 'Low' | 'Medium' | 'High' | 'Extreme';
+  executionRisk: string;
   selfValidationPassed: boolean;
   decisionFilter: string;
   noTradeReason?: string;

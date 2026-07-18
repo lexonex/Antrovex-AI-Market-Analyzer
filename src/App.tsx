@@ -1,7 +1,27 @@
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import { Dashboard } from './components/Dashboard';
+import SecurityGate from './components/SecurityGate';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('antrovex_auth');
+    setIsAuthenticated(authStatus === 'true');
+  }, []);
+
+  const handleUnlock = () => {
+    sessionStorage.setItem('antrovex_auth', 'true');
+    setIsAuthenticated(true);
+  };
+
+  if (isAuthenticated === null) return null; // Wait for initial check
+
+  if (!isAuthenticated) {
+    return <SecurityGate onUnlock={handleUnlock} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans flex flex-col selection:bg-orange-500/30">
       <Header />
@@ -19,6 +39,15 @@ export default function App() {
           </span>
           <span className="hidden md:inline">Protocol: Secure_JSON_HTTPS</span>
           <span className="hidden md:inline">Node: Global_Edge_A1</span>
+          <button 
+            onClick={() => {
+              sessionStorage.removeItem('antrovex_auth');
+              setIsAuthenticated(false);
+            }}
+            className="hidden md:inline hover:text-black transition-colors border-l border-black/5 pl-6"
+          >
+            Terminal: Logout
+          </button>
         </div>
         <div className="text-[9px] text-black/20 uppercase font-black tracking-[0.3em]">
           Antrovex_HUD • © 2026

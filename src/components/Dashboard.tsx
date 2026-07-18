@@ -294,7 +294,8 @@ export function Dashboard() {
                           "text-9xl font-black italic tracking-tighter leading-none text-black"
                         )}>
                           {result.signal === 'UP' ? 'CALL' : 
-                           result.signal === 'DOWN' ? 'PUT' : 'WAIT'}
+                           result.signal === 'DOWN' ? 'PUT' : 
+                           result.signal === 'NO_TRADE' ? 'REJECT' : 'WAIT'}
                         </h2>
                         {result.signal === 'NO_TRADE' && result.noTradeReason && (
                           <p className="text-[10px] font-mono font-bold text-orange-600 mt-2">CAUSE: {result.noTradeReason}</p>
@@ -415,6 +416,8 @@ export function Dashboard() {
                     <SpecCard label="LIQUIDITY_MAP" value={result.liquidityStatus} />
                     <SpecCard label="PRICE_ACTION" value={result.priceActionState} />
                     <SpecCard label="MOMENTUM_VE" value={result.momentumState} />
+                    <SpecCard label="RISK_LEVEL" value={result.riskLevel} />
+                    <SpecCard label="EXECUTION_RISK" value={result.executionRisk} />
                     <SpecCard label="SUP_STRENGTH" value={result.supportStrength} />
                     <SpecCard label="RES_STRENGTH" value={result.resistanceStrength} />
                     <SpecCard label="KNOWL_MATCH" value={`${result.knowledgeMatchScore}%`} />

@@ -8,11 +8,21 @@ import { logger } from "../logger/logger.js";
 export const parseAnalysisResponse = (jsonString: string): AnalysisResult => {
   try {
     // Basic cleanup in case model returns markdown blocks despite instructions
-    const cleaned = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
+    let cleaned = jsonString.trim();
+    if (cleaned.includes('```')) {
+      const match = cleaned.match(/```(?:json)?([\s\S]*?)```/);
+      if (match) cleaned = match[1].trim();
+    }
+    
     const parsed = JSON.parse(cleaned);
     
     // Ensure essential fields exist
     if (parsed.validChart === false) {
+      logger.warn("Model rejected image as invalid chart", { 
+        reason: parsed.reason, 
+        noTradeReason: parsed.noTradeReason,
+        imageQualityScore: parsed.imageQualityScore 
+      });
       return { 
         validChart: false,
         signal: 'NO_TRADE',
@@ -41,6 +51,8 @@ export const parseAnalysisResponse = (jsonString: string): AnalysisResult => {
         bullishEvidenceCount: 0,
         bearishEvidenceCount: 0,
         contradictionScore: 0,
+        riskLevel: 'Extreme',
+        executionRisk: 'Invalid Chart',
         selfValidationPassed: false,
         decisionFilter: 'Rejected',
         noTradeReason: 'Invalid Chart',
@@ -81,10 +93,12 @@ export const parseAnalysisResponse = (jsonString: string): AnalysisResult => {
       candlestickPattern: parsed.candlestickPattern || 'N/A',
       confluenceScore: parsed.confluenceScore || 0,
       knowledgeMatchScore: parsed.knowledgeMatchScore || 0,
-      imageQualityScore: parsed.imageQualityScore || 0,
+      imageQualityScore: parsed.imageQualityScore ?? (parsed.validChart !== false ? 75 : 0),
       bullishEvidenceCount: parsed.bullishEvidenceCount || 0,
       bearishEvidenceCount: parsed.bearishEvidenceCount || 0,
       contradictionScore: parsed.contradictionScore || 0,
+      riskLevel: parsed.riskLevel || 'Medium',
+      executionRisk: parsed.executionRisk || 'N/A',
       selfValidationPassed: !!parsed.selfValidationPassed,
       decisionFilter: parsed.decisionFilter || 'N/A',
       noTradeReason: parsed.noTradeReason || '',
