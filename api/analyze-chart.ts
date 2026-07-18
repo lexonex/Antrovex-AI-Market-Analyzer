@@ -1,14 +1,12 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { geminiClient } from '../lib/ai/gemini.js';
-import { ANALYSIS_PROMPT } from '../lib/ai/prompt.js';
-import { parseAnalysisResponse } from '../lib/ai/parser.js';
-import { validateBase64Image } from '../lib/validation/image.js';
-import { logger } from '../lib/logger/logger.js';
-import { ErrorCode, AppError } from '../lib/utils/errors.js';
-import { sendError, sendJson } from '../lib/utils/response.js';
+import { AnalysisOrchestrator } from '../src/core/orchestrator/AnalysisOrchestrator.js';
+import { validateBase64Image } from '../src/core/utils/image-validation.js';
+import { logger } from '../src/core/utils/logger.js';
+import { ErrorCode, AppError } from '../src/core/utils/errors.js';
+import { sendError, sendJson } from '../src/core/utils/response.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const requestId = Math.random().toString(36).substring(7);
+  const sessionId = Math.random().toString(36).substring(7);
   const startTime = Date.now();
 
   // Basic CORS headers
@@ -32,34 +30,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     logger.info('Processing chart analysis request', { 
-      requestId, 
-      imageSize: image.length,
-      endpoint: '/api/analyze-chart'
+      sessionId, 
+      imageSize: image.length
     });
 
     // 1. Validate image
     const base64Data = validateBase64Image(image);
-
-    // 2. Call Gemini
-    const aiResponse = await geminiClient.analyzeChart(base64Data, ANALYSIS_PROMPT);
-
-    // 3. Parse response
-    const analysis = parseAnalysisResponse(aiResponse);
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    // 2. Orchestrate V6 Analysis
+    const state = await AnalysisOrchestrator.analyze(imageBuffer, sessionId);
 
     const processingTime = Date.now() - startTime;
     logger.info('Analysis completed successfully', { 
-      requestId, 
+      sessionId, 
       processingTime,
-      validChart: analysis.validChart
+      signal: state.decision.finalSignal
     });
 
-    return sendJson(res, 200, analysis);
+    // Map V6 State to old flat structure for frontend compatibility
+    const legacyResponse = {
+      validChart: state.validation.validationPassed,
+      signal: state.decision.finalSignal,
+      confidence: Math.round(state.decision.decisionConfidence),
+      bullishProbability: Math.round(state.probability.bullishProbability * 100),
+      bearishProbability: Math.round(state.probability.bearishProbability * 100),
+      neutralProbability: Math.round(state.probability.neutralProbability * 100),
+      signalQuality: state.decision.finalSignal === 'NO_TRADE' ? 'Weak' : 'Excellent',
+      timeframe: state.session.timeframe,
+      expiry: '3M',
+      marketRegime: state.market.regime.type,
+      trendStrength: `${state.market.trend.strength}%`,
+      structure: state.market.structure.type,
+      bosDetected: state.market.structure.bos,
+      chochDetected: state.market.structure.choch,
+      liquidityStatus: state.market.liquidity.status,
+      liquidityTrap: state.market.liquidity.traps,
+      supportStrength: `${state.market.supportResistance.zoneStrength}%`,
+      resistanceStrength: `${state.market.supportResistance.zoneStrength}%`,
+      momentumState: `${state.market.momentum.direction} (${state.market.momentum.strength}%)`,
+      priceActionState: state.market.priceAction.currentBehaviour,
+      candlestickPattern: state.market.candlestick.pattern,
+      confluenceScore: Math.round(state.evidence.confluenceScore),
+      knowledgeMatchScore: state.knowledge.knowledgeMatch,
+      imageQualityScore: state.image.quality,
+      bullishEvidenceCount: Math.round(state.evidence.bullishEvidence),
+      bearishEvidenceCount: Math.round(state.evidence.bearishEvidence),
+      contradictionScore: Math.round(state.risk.contradictionRisk),
+      selfValidationPassed: state.validation.selfVerification,
+      decisionFilter: state.validation.validationPassed ? 'Passed' : 'Flagged',
+      noTradeReason: state.decision.finalSignal === 'NO_TRADE' ? state.decision.decisionReason : '',
+      analysis: {
+        trend: state.market.trend.direction,
+        support: `${state.market.supportResistance.nearestSupport}`,
+        resistance: `${state.market.supportResistance.nearestResistance}`,
+        candlestickPattern: state.market.candlestick.pattern,
+        momentum: state.market.momentum.direction,
+        marketCondition: state.market.regime.type
+      },
+      reason: state.decision.decisionReason,
+      state // Include full state for advanced debugging if needed
+    };
+
+    return sendJson(res, 200, legacyResponse);
 
   } catch (error: any) {
     const status = error instanceof AppError ? error.status : 500;
     const code = error instanceof AppError ? error.code : ErrorCode.INTERNAL_ERROR;
     
-    logger.error('Analysis request failed', error, { requestId });
+    logger.error('Analysis request failed', error, { sessionId });
     
     return sendError(res, status, code, error.message || 'Internal Server Error');
   }
