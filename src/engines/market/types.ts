@@ -14,7 +14,19 @@ export enum MarketRegimeType {
   TRANSITION = 'TRANSITION'
 }
 
+export enum TechnicalContextLevel {
+  TRENDING = 'TRENDING',
+  PULLBACK = 'PULLBACK',
+  CONTINUATION = 'CONTINUATION',
+  REVERSAL = 'REVERSAL',
+  COMPRESSION = 'COMPRESSION',
+  CONSOLIDATION = 'CONSOLIDATION',
+  HIGH_VOLATILITY = 'HIGH_VOLATILITY',
+  LOW_VOLATILITY = 'LOW_VOLATILITY'
+}
+
 export interface MarketIntelligenceState {
+  context: TechnicalContextLevel;
   regime: {
     type: MarketRegimeType;
     confidence: number;
@@ -58,6 +70,12 @@ export interface MarketIntelligenceState {
     continuationProbability: number;
     reversalProbability: number;
     executionContext: string;
+  };
+  microPriceAction: {
+    last5Candles: string;
+    currentCandleBehaviour: string;
+    wickRejection: number;
+    bodyExpansion: number;
   };
   momentum: {
     direction: 'UP' | 'DOWN' | 'NEUTRAL';

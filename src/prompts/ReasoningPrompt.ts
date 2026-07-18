@@ -20,9 +20,12 @@ ${JSON.stringify(state, null, 2)}
 {
   "signal": "${state.decision.finalSignal}",
   "confidence": ${state.decision.decisionConfidence},
-  "recommendedExpiry": "X-Minutes (e.g. 5M, 7M, 10M, 15M) - Choose the most stable duration based on technical setup",
+  "marketContext": "${state.market.context}",
+  "recommendedExpiry": "${state.decision.recommendedExpiry}",
+  "expiryJustification": "${state.decision.expiryReason}",
+  "confidenceBreakdown": ${JSON.stringify(state.decision.confidenceBreakdown)},
   "reason": "Short summary of why this decision was made",
-  "analysis": "Detailed technical reasoning paragraphs",
+  "analysis": "Detailed technical reasoning paragraphs. You MUST explicitly mention the recommended expiry of ${state.decision.recommendedExpiry} and explain WHY it was chosen based on the provided technical context (${state.market.context}) and momentum (${state.market.momentum.strength}%).",
   "institutionalBias": "${state.market.institutionalBias}"
 }
 `;

@@ -5,7 +5,7 @@
 import { AnalysisState } from '../../core/state/AnalysisState.js';
 import { aiService } from '../../services/ai/AIService.js';
 import { EXTRACTION_PROMPT } from '../../prompts/ExtractionPrompt.js';
-import { MarketTelemetryMapper } from '../../core/mappers/MarketTelemetryMapper.js';
+import { MarketTelemetryMapper } from '../../mappers/MarketTelemetryMapper.js';
 import { MarketTelemetryValidator } from '../../core/validators/MarketTelemetryValidator.js';
 import { logger } from '../../core/utils/logger.js';
 
@@ -37,7 +37,7 @@ export class VisionEngine {
       }
 
       // 2. Map Telemetry to State
-      MarketTelemetryMapper.map(state, extractedData);
+      MarketTelemetryMapper.map(extractedData, state);
       
       logger.info('VisionEngine: State Mapping Complete');
       

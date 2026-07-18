@@ -4,6 +4,7 @@
 
 import { AnalysisState } from '../../core/state/AnalysisState.js';
 import { logger } from '../../core/utils/logger.js';
+import { TechnicalContextLevel, MarketRegimeType } from './types.js';
 
 export class MarketEngine {
   public static async execute(state: AnalysisState): Promise<void> {
@@ -12,15 +13,26 @@ export class MarketEngine {
     logger.info('MarketEngine: Refining institutional intelligence');
 
     try {
-      // 1. Validate required inputs for refinement
-      if (!state.market.trend || !state.market.structure || !state.market.regime) {
-        logger.warn('MarketEngine: Incomplete market state detected. Using defaults.');
+      const { trend, structure, regime, momentum, microPriceAction } = state.market;
+
+      // 1. Technical Context Classification
+      let context = TechnicalContextLevel.CONSOLIDATION;
+
+      if (trend.strength > 70 && momentum.strength > 60) {
+        context = TechnicalContextLevel.TRENDING;
+      } else if (trend.strength > 50 && momentum.strength < 40) {
+        context = TechnicalContextLevel.PULLBACK;
+      } else if (regime.type === MarketRegimeType.COMPRESSION || microPriceAction.bodyExpansion < 30) {
+        context = TechnicalContextLevel.COMPRESSION;
+      } else if (state.market.volatility > 70) {
+        context = TechnicalContextLevel.HIGH_VOLATILITY;
       }
 
+      state.market.context = context;
+
       // 2. Refine Institutional Bias
-      const trendDir = state.market.trend.direction || 'NEUTRAL';
-      const structureType = state.market.structure.type || 'RANGING';
-      const trendStrength = state.market.trend.strength || 0;
+      const trendDir = trend.direction || 'NEUTRAL';
+      const structureType = structure.type || 'RANGING';
       
       if (trendDir === 'BULLISH' && structureType === 'BULLISH') {
         state.market.institutionalBias = 'BULLISH';
@@ -31,13 +43,11 @@ export class MarketEngine {
       }
 
       // 3. Refine Execution Context
-      const regime = state.market.regime.type || 'TRANSITION';
-      state.market.executionContext = `Market in ${regime} regime. ${trendDir} trend (${trendStrength}%). Structure: ${structureType}. Institutional Bias: ${state.market.institutionalBias}.`;
+      state.market.executionContext = `Context: ${context}. Regime: ${regime.type}. Trend: ${trendDir} (${trend.strength}%). Bias: ${state.market.institutionalBias}.`;
 
-      logger.info(`MarketEngine: Bias set to ${state.market.institutionalBias}`);
+      logger.info(`MarketEngine: Context=${context}, Bias=${state.market.institutionalBias}`);
     } catch (error: any) {
       logger.error('MarketEngine: Refinement failed', error);
-      // Graceful degradation: context is already initialized in StateManager
     }
 
     state.telemetry.engineDurations['market'] = Date.now() - startTime;

@@ -4,6 +4,7 @@ import { validateBase64Image } from '../src/core/utils/image-validation.js';
 import { logger } from '../src/core/utils/logger.js';
 import { ErrorCode, AppError } from '../src/core/utils/errors.js';
 import { sendError, sendJson } from '../src/core/utils/response.js';
+import { OutputEngine } from '../src/engines/output/OutputEngine.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const sessionId = Math.random().toString(36).substring(7);
@@ -37,61 +38,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 1. Validate image
     const base64Data = validateBase64Image(image);
     const imageBuffer = Buffer.from(base64Data, 'base64');
-    // 2. Orchestrate V6 Analysis
+
+    // 2. Orchestrate Deterministic Analysis OS Pipeline
     const state = await AnalysisOrchestrator.analyze(imageBuffer, sessionId);
 
+    // 3. Generate Output Packet
+    const response = await OutputEngine.execute(state);
+
     const processingTime = Date.now() - startTime;
-    logger.info('Analysis completed successfully', { 
+    logger.info('Analysis OS Pipeline complete', { 
       sessionId, 
       processingTime,
-      signal: state.decision.finalSignal
+      signal: response.signal
     });
 
-    // Map V6 State to old flat structure for frontend compatibility
-    const legacyResponse = {
-      validChart: state.validation.validationPassed,
-      signal: state.decision.finalSignal,
-      confidence: Math.round(state.decision.decisionConfidence),
-      bullishProbability: Math.round(state.probability.bullishProbability * 100),
-      bearishProbability: Math.round(state.probability.bearishProbability * 100),
-      neutralProbability: Math.round(state.probability.neutralProbability * 100),
-      signalQuality: state.decision.finalSignal === 'NO_TRADE' ? 'Weak' : 'Excellent',
-      timeframe: state.session.timeframe,
-      expiry: state.decision.recommendedExpiry || '3M',
-      marketRegime: state.market.regime.type,
-      trendStrength: `${state.market.trend.strength}%`,
-      structure: state.market.structure.type,
-      bosDetected: state.market.structure.bos,
-      chochDetected: state.market.structure.choch,
-      liquidityStatus: state.market.liquidity.status,
-      liquidityTrap: state.market.liquidity.traps,
-      supportStrength: `${state.market.supportResistance.zoneStrength}%`,
-      resistanceStrength: `${state.market.supportResistance.zoneStrength}%`,
-      momentumState: `${state.market.momentum.direction} (${state.market.momentum.strength}%)`,
-      priceActionState: state.market.priceAction.currentBehaviour,
-      candlestickPattern: state.market.candlestick.pattern,
-      confluenceScore: Math.round(state.evidence.confluenceScore),
-      knowledgeMatchScore: state.knowledge.knowledgeMatch,
-      imageQualityScore: state.image.quality,
-      bullishEvidenceCount: Math.round(state.evidence.bullishEvidence),
-      bearishEvidenceCount: Math.round(state.evidence.bearishEvidence),
-      contradictionScore: Math.round(state.risk.contradictionRisk),
-      selfValidationPassed: state.validation.selfVerification,
-      decisionFilter: state.validation.validationPassed ? 'Passed' : 'Flagged',
-      noTradeReason: state.decision.finalSignal === 'NO_TRADE' ? state.decision.decisionReason : '',
-      analysis: {
-        trend: state.market.trend.direction,
-        support: `${state.market.supportResistance.nearestSupport}`,
-        resistance: `${state.market.supportResistance.nearestResistance}`,
-        candlestickPattern: state.market.candlestick.pattern,
-        momentum: state.market.momentum.direction,
-        marketCondition: state.market.regime.type
-      },
-      reason: state.decision.decisionReason,
-      state // Include full state for advanced debugging if needed
-    };
-
-    return sendJson(res, 200, legacyResponse);
+    return sendJson(res, 200, response);
 
   } catch (error: any) {
     const status = error instanceof AppError ? error.status : 500;

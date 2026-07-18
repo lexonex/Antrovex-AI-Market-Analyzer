@@ -9,37 +9,54 @@ export interface AnalysisResult {
   bullishProbability: number;
   bearishProbability: number;
   neutralProbability: number;
-  signalQuality: 'Excellent' | 'Good' | 'Average' | 'Weak';
-  timeframe: string;
   expiry: string;
+  expiryReason: string;
   marketRegime: string;
   trendStrength: string;
   structure: string;
-  bosDetected: boolean;
-  chochDetected: boolean;
-  liquidityStatus: string;
-  liquidityTrap: boolean;
-  supportStrength: string;
-  resistanceStrength: string;
   momentumState: string;
   priceActionState: string;
   candlestickPattern: string;
   confluenceScore: number;
   knowledgeMatchScore: number;
   imageQualityScore: number;
-  bullishEvidenceCount: number;
-  bearishEvidenceCount: number;
-  contradictionScore: number;
-  selfValidationPassed: boolean;
-  decisionFilter: string;
-  noTradeReason?: string;
-  analysis: {
-    trend: string;
-    support: string;
-    resistance: string;
-    candlestickPattern: string;
-    momentum: string;
-    marketCondition: string;
-  };
   reason: string;
+  analysis: string;
+  institutionalBias: string;
+  
+  // Debug Info
+  confidenceBreakdown: Array<{
+    name: string;
+    score: number;
+    weight: number;
+    contribution: number;
+    status: string;
+  }>;
+  evidence: {
+    bullish: number;
+    bearish: number;
+    confluence: number;
+    votes: Array<{
+      engine: string;
+      vote: string;
+      score: number;
+    }>;
+  };
+  validation: {
+    passed: boolean;
+    mandatory: string[];
+    optional: string[];
+  };
+  risk: {
+    riskPenalty: number;
+    overallRisk: number;
+    factors: Array<{
+      name: string;
+      penalty: number;
+    }>;
+  };
+  telemetry: {
+    engineDurations: Record<string, number>;
+  };
+  audit: string[];
 }

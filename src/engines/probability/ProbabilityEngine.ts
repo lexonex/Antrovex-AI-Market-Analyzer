@@ -12,12 +12,12 @@ export class ProbabilityEngine {
     logger.info('ProbabilityEngine: Calculating statistical distribution');
 
     try {
-      const bullish = state.evidence.bullishEvidence || 0;
-      const bearish = state.evidence.bearishEvidence || 0;
-      const neutral = 10; // Base neutral floor
+      const { evidence, risk, market } = state;
+      const bullish = evidence.bullishEvidence || 0;
+      const bearish = evidence.bearishEvidence || 0;
+      const neutral = 5; // Floor
 
       const total = bullish + bearish + neutral;
-      
       const upProb = bullish / total;
       const downProb = bearish / total;
       const neutralProb = neutral / total;
@@ -31,11 +31,10 @@ export class ProbabilityEngine {
           up: upProb,
           down: downProb,
           noTrade: neutralProb
-        },
-        confidenceScore: Math.max(0, Math.min(100, (state.evidence.evidenceStrength || 0) - (state.risk.riskPenalty || 0)))
+        }
       };
 
-      logger.info(`ProbabilityEngine: Confidence Score = ${state.probability.confidenceScore.toFixed(1)}%`);
+      logger.info(`ProbabilityEngine: Distribution = Up:${(upProb*100).toFixed(0)}%, Down:${(downProb*100).toFixed(0)}%`);
     } catch (error: any) {
       logger.error('ProbabilityEngine: Calculation failed', error);
     }

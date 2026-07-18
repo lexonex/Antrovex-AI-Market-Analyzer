@@ -26,6 +26,7 @@ Return ONLY raw JSON.
     }
   },
   "market": {
+    "context": "TRENDING | PULLBACK | CONTINUATION | REVERSAL | COMPRESSION | CONSOLIDATION | HIGH_VOLATILITY | LOW_VOLATILITY",
     "regime": "STRONG_BULLISH | WEAK_BULLISH | STRONG_BEARISH | WEAK_BEARISH | SIDEWAYS_RANGE | CONSOLIDATION | COMPRESSION | EXPANSION | TRANSITION",
     "trend": "BULLISH | BEARISH | NEUTRAL",
     "trendStrength": 0-100,
@@ -46,7 +47,8 @@ Return ONLY raw JSON.
     },
     "momentum": {
       "strength": 0-100,
-      "direction": "UP | DOWN | NEUTRAL"
+      "direction": "UP | DOWN | NEUTRAL",
+      "quality": 0-100
     },
     "candlestick": {
       "pattern": "string",
@@ -55,19 +57,21 @@ Return ONLY raw JSON.
       "sellerPressure": 0-100,
       "rejectionStrength": 0-100
     },
+    "microPriceAction": {
+      "last5Candles": "string",
+      "currentCandleBehaviour": "string",
+      "wickRejection": 0-100,
+      "bodyExpansion": 0-100
+    },
     "supportResistance": {
       "nearestSupport": number,
       "nearestResistance": number,
       "zoneStrength": 0-100
     },
-    "priceAction": {
-      "currentBehaviour": "string",
-      "continuationProbability": 0-100,
-      "reversalProbability": 0-100
-    },
     "volatility": 0-100,
     "compression": boolean,
-    "expansion": boolean
+    "expansion": boolean,
+    "institutionalBias": "BULLISH | BEARISH | NEUTRAL"
   },
   "knowledgeMatch": 0-100
 }

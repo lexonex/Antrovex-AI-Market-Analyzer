@@ -1,68 +1,64 @@
-/**
- * Analysis OS v6 - Orchestrator
- */
-
-import { StateManager } from '../state/StateManager.js';
 import { AnalysisState } from '../state/AnalysisState.js';
+import { StateManager } from '../state/StateManager.js';
 import { logger } from '../utils/logger.js';
+import { AIService } from '../../services/ai/AIService.js';
+import { EXTRACTION_PROMPT } from '../../prompts/ExtractionPrompt.js';
+import { getReasoningPrompt } from '../../prompts/ReasoningPrompt.js';
+import { VisionResponseMapper } from '../../mappers/VisionResponseMapper.js';
+import { MarketTelemetryMapper } from '../../mappers/MarketTelemetryMapper.js';
 
-// Import Engines
-import { VisionEngine } from '../../engines/vision/VisionEngine.js';
+// Engines
 import { MarketEngine } from '../../engines/market/MarketEngine.js';
-import { KnowledgeEngine } from '../../engines/knowledge/KnowledgeEngine.js';
-import { EvidenceEngine } from '../../engines/evidence/EvidenceEngine.js';
-import { RiskEngine } from '../../engines/risk/RiskEngine.js';
+import { EvidenceScoringEngine } from '../../engines/scoring/EvidenceScoringEngine.js';
 import { ProbabilityEngine } from '../../engines/probability/ProbabilityEngine.js';
+import { RiskEngine } from '../../engines/risk/RiskEngine.js';
+import { DynamicExpiryEngine } from '../../engines/expiry/DynamicExpiryEngine.js';
+import { ConfidenceEngine } from '../../engines/confidence/ConfidenceEngine.js';
 import { DecisionEngine } from '../../engines/decision/DecisionEngine.js';
 import { ValidationEngine } from '../../engines/validation/ValidationEngine.js';
-import { OutputEngine } from '../../engines/output/OutputEngine.js';
 
 export class AnalysisOrchestrator {
   public static async analyze(imageBuffer: Buffer, sessionId: string): Promise<AnalysisState> {
-    const state = StateManager.createInitialState(sessionId);
     const startTime = Date.now();
-
-    logger.info(`Session ${sessionId}: Analysis Started`);
+    logger.info(`AnalysisOrchestrator: Initializing pipeline for session ${sessionId}`);
 
     try {
-      // Stage 1: Vision Layer
-      logger.info(`Session ${sessionId}: [Stage 1] Vision Extraction`);
-      await VisionEngine.execute(state, imageBuffer);
-      
-      // Stage 2: Technical Intelligence Layer
-      logger.info(`Session ${sessionId}: [Stage 2] Technical Intelligence`);
-      await MarketEngine.execute(state);
-      
-      // Stage 3: Knowledge Layer
-      logger.info(`Session ${sessionId}: [Stage 3] Knowledge Retrieval`);
-      await KnowledgeEngine.execute(state);
-      
-      // Stage 4: Decision Intelligence Layer
-      logger.info(`Session ${sessionId}: [Stage 4] Decision Intelligence`);
-      await EvidenceEngine.execute(state);
-      await RiskEngine.execute(state);
-      await ProbabilityEngine.execute(state);
-      
-      // Stage 5: Decision Layer
-      logger.info(`Session ${sessionId}: [Stage 5] Decision Generation`);
-      await DecisionEngine.execute(state);
-      
-      // Stage 6: Validation Layer
-      logger.info(`Session ${sessionId}: [Stage 6] Self-Validation`);
-      await ValidationEngine.execute(state);
-      
-      // Stage 7: Output Layer
-      logger.info(`Session ${sessionId}: [Stage 7] Output Reasoning`);
-      await OutputEngine.execute(state, imageBuffer);
+      const ai = AIService.getInstance();
+      const state = StateManager.createInitialState(sessionId);
 
-      state.telemetry.executionTime = Date.now() - startTime;
-      logger.info(`Session ${sessionId}: Analysis Completed Successfully in ${state.telemetry.executionTime}ms`);
+      // 1. Vision Intelligence Extraction (Gemini)
+      const imageBase64 = imageBuffer.toString('base64');
+      const visionOutput = await ai.generateJson(imageBase64, EXTRACTION_PROMPT);
+      (state.telemetry as any).rawVisionOutput = visionOutput;
+
+      // 2. Deterministic Mapping
+      const telemetry = VisionResponseMapper.map(visionOutput);
+      MarketTelemetryMapper.map(telemetry, state);
+
+      // 3. Analysis Engines Pipeline (Deterministic OS)
+      await MarketEngine.execute(state);
+      await EvidenceScoringEngine.execute(state);
+      await RiskEngine.execute(state);
+      await ConfidenceEngine.execute(state);
+      await ProbabilityEngine.execute(state);
+      await DynamicExpiryEngine.execute(state);
+      await DecisionEngine.execute(state);
+      await ValidationEngine.execute(state);
+
+      // 4. AI Reasoning (Post-Decision Insight)
+      if (state.decision.finalSignal !== 'NO_TRADE') {
+        const reasoningPrompt = getReasoningPrompt(state);
+        const reasoningOutput = await ai.generateJson(imageBase64, reasoningPrompt);
+        state.decision.decisionSummary = reasoningOutput.analysis || reasoningOutput.reason;
+      } else {
+        state.decision.decisionSummary = state.decision.decisionReason;
+      }
+
+      logger.info(`AnalysisOrchestrator: Analysis complete in ${Date.now() - startTime}ms`);
       return state;
     } catch (error: any) {
-      logger.error(`Session ${sessionId}: Orchestration Error`, error);
-      state.decision.rejectionReason = `System Failure: ${error.message}`;
-      state.telemetry.executionTime = Date.now() - startTime;
-      return state;
+      logger.error('AnalysisOrchestrator: Pipeline execution failed', error);
+      throw error;
     }
   }
 }

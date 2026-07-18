@@ -1,0 +1,14 @@
+
+export const RISK_RULES = {
+  MAX_PENALTY: 40,
+  THRESHOLDS: {
+    LOW: 15,
+    MODERATE: 30,
+    HIGH: 45
+  },
+  FACTORS: {
+    VOLATILITY_SPIKE: 10,
+    LOW_LIQUIDITY: 5,
+    CONTRADICTION_MAJOR: 20
+  }
+};

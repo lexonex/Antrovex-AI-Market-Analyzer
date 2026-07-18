@@ -26,46 +26,37 @@ export class MarketTelemetryValidator {
 
     logger.info('Validating Market Telemetry');
 
-    // 1. Critical Field Validation
+    // 1. Mandatory Visual Validation
     if (!telemetry.image) {
-      errors.push('Missing image metadata');
+      errors.push('MANDATORY_FAILURE: Missing image metadata');
       criticalMissing = true;
     }
 
+    if (telemetry.image && telemetry.image.visibleCandles === 0) {
+      errors.push('MANDATORY_FAILURE: No visible candlesticks detected');
+      criticalMissing = true;
+    }
+
+    if (telemetry.image && telemetry.image.screenshotHealth < 15) {
+      errors.push('MANDATORY_FAILURE: Image screenshot health critical (below 15%)');
+      criticalMissing = true;
+    }
+
+    // 2. Identification Validation
     if (!telemetry.market) {
-      errors.push('Missing market telemetry');
+      errors.push('MANDATORY_FAILURE: No market telemetry extracted');
       criticalMissing = true;
     }
 
-    // 2. Image Quality & Visibility
-    if (telemetry.image) {
-      if (telemetry.image.quality < 30) {
-        errors.push('Image quality too low for reliable analysis');
-        criticalMissing = true;
-      }
-      if (telemetry.image.isBlurred) {
-        warnings.push('Image appears blurred, results may be less accurate');
-      }
-    }
-
-    // 3. Market Regime Validation
+    // 3. Optional Technical Validation (Warnings only - IESE handles weighting)
     if (telemetry.market) {
-      if (!Object.values(MarketRegimeType).includes(telemetry.market.regime)) {
-        warnings.push(`Unknown market regime: ${telemetry.market.regime}. Defaulting to TRANSITION.`);
-      }
+      if (!telemetry.market.regime) warnings.push('OPTIONAL_UNKNOWN: Market regime');
+      if (!telemetry.market.trend) warnings.push('OPTIONAL_UNKNOWN: Trend direction');
+      if (!telemetry.market.structure) warnings.push('OPTIONAL_UNKNOWN: Market structure');
+      
+      // IESE allows analysis even if specific layers like liquidity or momentum are missing
+      if (!telemetry.market.liquidity) warnings.push('OPTIONAL_UNKNOWN: Liquidity sweep data');
 
-      // 4. Trend Validation
-      const validTrends = ['BULLISH', 'BEARISH', 'NEUTRAL'];
-      if (!validTrends.includes(telemetry.market.trend)) {
-        warnings.push(`Invalid trend direction: ${telemetry.market.trend}. Defaulting to NEUTRAL.`);
-      }
-
-      // 5. Structure Validation
-      if (!telemetry.market.structure) {
-        warnings.push('Missing market structure data');
-      }
-
-      // 6. Range Validations
       this.checkRange(telemetry.market.trendStrength, 'Trend Strength', warnings);
       this.checkRange(telemetry.knowledgeMatch, 'Knowledge Match', warnings);
     }

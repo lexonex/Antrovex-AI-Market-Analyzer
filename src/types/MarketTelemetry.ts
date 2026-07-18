@@ -3,7 +3,7 @@
  * This interface represents the complete set of data extracted from the market chart.
  */
 
-import { MarketRegimeType } from '../engines/market/types.js';
+import { MarketRegimeType, TechnicalContextLevel } from '../engines/market/types.js';
 
 export interface MarketTelemetry {
   image: {
@@ -24,6 +24,7 @@ export interface MarketTelemetry {
     };
   };
   market: {
+    context?: TechnicalContextLevel;
     regime: MarketRegimeType;
     trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
     trendStrength: number;
@@ -62,6 +63,12 @@ export interface MarketTelemetry {
       currentBehaviour: string;
       continuationProbability: number;
       reversalProbability: number;
+    };
+    microPriceAction: {
+      last5Candles: string;
+      currentCandleBehaviour: string;
+      wickRejection: number;
+      bodyExpansion: number;
     };
     volatility?: number;
     compression?: boolean;

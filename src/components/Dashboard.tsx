@@ -19,6 +19,8 @@ export function Dashboard() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [showCalibration, setShowCalibration] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -229,8 +231,8 @@ export function Dashboard() {
             </div>
             <div className="space-y-4 font-mono">
               <SpecRow label="ANALYSIS_TF" value="1M_PRECISION" />
-              <SpecRow label="SIGNAL_PROTOCOL" value="BINARY_3M_EXP" />
-              <SpecRow label="CO_PROCESSOR" value="INST_V3_ENGINE" />
+              <SpecRow label="SIGNAL_PROTOCOL" value={result ? `DYNAMIC_${result.expiry}_EXP` : "DYNAMIC_ANALYSIS"} />
+              <SpecRow label="CO_PROCESSOR" value="IESE_IES_V7" />
               <SpecRow label="DATA_STREAM" value="LIVE_TELEMETRY" />
             </div>
           </div>
@@ -257,7 +259,7 @@ export function Dashboard() {
                 <h3 className="text-[13px] font-black text-black uppercase tracking-[0.5em] mb-6">Awaiting_Market_Feed</h3>
                 <div className="w-20 h-px bg-orange-500/20 mb-6" />
                 <p className="text-[11px] font-mono text-black/30 max-w-sm mx-auto leading-loose uppercase tracking-[0.2em]">
-                  Initialize Institutional V3 telemetry to generate 3M execution signals.
+                  Initialize Institutional V7 telemetry to generate dynamic execution signals.
                 </p>
               </motion.div>
             ) : (
@@ -290,14 +292,22 @@ export function Dashboard() {
                             result.signal === 'DOWN' ? "text-red-600" : "text-orange-600"
                           )}>Execution_Signal</span>
                         </div>
-                        <h2 className={cn(
-                          "text-9xl font-black italic tracking-tighter leading-none text-black"
-                        )}>
-                          {result.signal === 'UP' ? 'CALL' : 
-                           result.signal === 'DOWN' ? 'PUT' : 'WAIT'}
-                        </h2>
-                        {result.signal === 'NO_TRADE' && result.noTradeReason && (
-                          <p className="text-[10px] font-mono font-bold text-orange-600 mt-2">CAUSE: {result.noTradeReason}</p>
+                        <div className="flex items-baseline gap-4">
+                          <h2 className={cn(
+                            "text-9xl font-black italic tracking-tighter leading-none text-black"
+                          )}>
+                            {result.signal === 'UP' ? 'CALL' : 
+                             result.signal === 'DOWN' ? 'PUT' : 'WAIT'}
+                          </h2>
+                          {result.signal !== 'NO_TRADE' && (
+                            <div className="flex flex-col">
+                              <span className="text-orange-500 font-black text-2xl tracking-tighter">{result.expiry}</span>
+                              <span className="text-black/20 text-[8px] font-black uppercase tracking-widest">Expiry</span>
+                            </div>
+                          )}
+                        </div>
+                        {result.signal === 'NO_TRADE' && result.reason && (
+                          <p className="text-[10px] font-mono font-bold text-orange-600 mt-2">CAUSE: {result.reason}</p>
                         )}
                       </div>
                       <div className="text-right">
@@ -307,10 +317,10 @@ export function Dashboard() {
                           <span className="text-2xl font-bold text-orange-500">%</span>
                         </div>
                         <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-black/5 rounded text-[9px] font-black uppercase tracking-widest text-black/40">
-                          Quality: <span className={cn(
-                            result.signalQuality === 'Excellent' ? "text-emerald-600" : 
-                            result.signalQuality === 'Good' ? "text-blue-600" : "text-orange-600"
-                          )}>{result.signalQuality}</span>
+                          Bias: <span className={cn(
+                            result.institutionalBias === 'BULLISH' ? "text-emerald-600" : 
+                            result.institutionalBias === 'BEARISH' ? "text-red-600" : "text-orange-600"
+                          )}>{result.institutionalBias}</span>
                         </div>
                       </div>
                     </div>
@@ -326,9 +336,9 @@ export function Dashboard() {
                          <h4 className="text-[9px] font-black text-black/20 uppercase tracking-[0.2em]">Probability_Engine_Output</h4>
                          <div className={cn(
                            "px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter",
-                           result.selfValidationPassed ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
+                           result.validation.passed ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
                          )}>
-                           {result.selfValidationPassed ? 'Self_Validation: Passed' : 'Self_Validation: Failed'}
+                           {result.validation.passed ? 'Self_Validation: Passed' : 'Self_Validation: Failed'}
                          </div>
                        </div>
                        <div className="grid grid-cols-3 gap-4 font-mono">
@@ -370,21 +380,21 @@ export function Dashboard() {
                          </p>
                        </div>
                        <div className="space-y-1">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Evidence_B/B</span>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Score_Distribution</span>
                          <p className="text-[11px] font-bold text-black/80">
-                           <span className="text-emerald-600">{result.bullishEvidenceCount}</span>
+                           <span className="text-emerald-600">{Math.round(result.evidence.bullish)}</span>
                            <span className="text-black/20 mx-1">/</span>
-                           <span className="text-red-600">{result.bearishEvidenceCount}</span>
+                           <span className="text-red-600">{Math.round(result.evidence.bearish)}</span>
                          </p>
                        </div>
                        <div className="space-y-1">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Contradiction</span>
-                         <p className={cn("text-[11px] font-bold", result.contradictionScore > 30 ? "text-red-600" : "text-emerald-600")}>
-                           {result.contradictionScore}%
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Risk_Penalty</span>
+                         <p className={cn("text-[11px] font-bold", result.risk.riskPenalty > 30 ? "text-red-600" : "text-emerald-600")}>
+                           -{result.risk.riskPenalty}%
                          </p>
                        </div>
                        <div className="space-y-1">
-                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Conf_Score</span>
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Confluence</span>
                          <p className="text-[11px] font-bold text-black/80">{result.confluenceScore}/100</p>
                        </div>
                     </div>
@@ -410,16 +420,98 @@ export function Dashboard() {
                       <div className="w-4 h-1 bg-black/10" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono">
-                    <SpecCard label="TREND_STRENGTH" value={result.trendStrength} />
-                    <SpecCard label="LIQUIDITY_MAP" value={result.liquidityStatus} />
-                    <SpecCard label="PRICE_ACTION" value={result.priceActionState} />
-                    <SpecCard label="MOMENTUM_VE" value={result.momentumState} />
-                    <SpecCard label="SUP_STRENGTH" value={result.supportStrength} />
-                    <SpecCard label="RES_STRENGTH" value={result.resistanceStrength} />
-                    <SpecCard label="KNOWL_MATCH" value={`${result.knowledgeMatchScore}%`} />
-                    <SpecCard label="DECISION_FLT" value={result.decisionFilter} />
-                  </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 font-mono">
+                      <SpecCard label="TREND_STRENGTH" value={result.trendStrength} />
+                      <SpecCard label="EXPIRY_TIME" value={result.expiry} />
+                      <SpecCard label="MARKET_BIAS" value={result.institutionalBias} />
+                      <SpecCard label="PRICE_ACTION" value={result.priceActionState} />
+                      <SpecCard label="MOMENTUM_VE" value={result.momentumState} />
+                      <SpecCard label="CANDLE_PATTERN" value={result.candlestickPattern} />
+                      <SpecCard label="CONFLUENCE" value={`${result.confluenceScore}/100`} />
+                      <SpecCard label="KNOWL_MATCH" value={`${result.knowledgeMatchScore}%`} />
+                      <SpecCard label="EXPIRY_RULE" value={result.expiryReason} />
+                      <SpecCard label="VALID_STATUS" value={result.validation.passed ? "PASSED" : "FAILED"} />
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-black/5 flex justify-between items-center">
+                      <button 
+                        onClick={() => setShowCalibration(!showCalibration)}
+                        className="text-[10px] font-black text-orange-500 uppercase tracking-widest hover:underline"
+                      >
+                        {showCalibration ? 'Hide_Calibration_Matrix' : 'Show_Calibration_Matrix'}
+                      </button>
+                    </div>
+
+                    {showCalibration && (
+                      <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="mt-8 space-y-8"
+                      >
+                        {/* Calibration Mode / Debug UI */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div>
+                            <h4 className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] mb-4">Engine_Score_Breakdown</h4>
+                            <div className="space-y-3">
+                              {result.confidenceBreakdown.map(comp => (
+                                <div key={comp.name} className="flex flex-col gap-1.5 p-3 bg-black/[0.02] rounded border border-black/5">
+                                  <div className="flex justify-between items-center text-[10px]">
+                                    <span className="font-bold text-black/60">{comp.name}</span>
+                                    <span className="font-mono text-black/40">Score: {comp.score} | Weight: {comp.weight}%</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-1 bg-black/5 rounded-full overflow-hidden">
+                                      <div className="h-full bg-orange-500/40" style={{ width: `${comp.score}%` }} />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-orange-600">+{comp.contribution.toFixed(1)}%</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] mb-4">Risk_Audit_Factors</h4>
+                            <div className="space-y-3">
+                              {result.risk.factors.length > 0 ? result.risk.factors.map((factor, i) => (
+                                <div key={i} className="flex justify-between items-center p-3 bg-red-500/[0.02] rounded border border-red-500/10">
+                                  <span className="text-[10px] font-bold text-black/60">{factor.name}</span>
+                                  <span className="text-[10px] font-bold text-red-600">-{factor.penalty}%</span>
+                                </div>
+                              )) : (
+                                <div className="p-3 bg-emerald-500/[0.02] rounded border border-emerald-500/10 text-[10px] text-emerald-600 font-bold">
+                                  NO_RISK_FACTORS_DETECTED
+                                </div>
+                              )}
+                              
+                              <div className="pt-4 mt-4 border-t border-black/5">
+                                <h4 className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] mb-4">Analysis_Audit_Trail</h4>
+                                <div className="space-y-1.5 font-mono text-[9px] text-black/40">
+                                  {result.audit.map((step, i) => (
+                                    <div key={i} className="flex gap-2">
+                                      <span>[{i+1}]</span>
+                                      <span>{step}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="p-6 bg-black/[0.02] rounded border border-black/5">
+                          <h4 className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] mb-4">Telemetry_Latency_Map</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[9px]">
+                            {Object.entries(result.telemetry.engineDurations).map(([engine, duration]) => (
+                              <div key={engine} className="flex justify-between border-b border-black/5 pb-1">
+                                <span className="text-black/40 uppercase">{engine}</span>
+                                <span className="font-bold text-black/60">{duration}ms</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                 </div>
               </motion.div>
             )}

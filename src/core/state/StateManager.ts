@@ -3,7 +3,7 @@
  */
 
 import { AnalysisState, SessionState } from './AnalysisState.js';
-import { MarketRegimeType } from '../../engines/market/types.js';
+import { MarketRegimeType, TechnicalContextLevel } from '../../engines/market/types.js';
 import { Signal } from '../../engines/decision/types.js';
 
 export class StateManager {
@@ -35,6 +35,7 @@ export class StateManager {
         geometry: { width: 0, height: 0 }
       },
       market: {
+        context: TechnicalContextLevel.CONSOLIDATION,
         regime: { type: MarketRegimeType.TRANSITION, confidence: 0, stability: 0 },
         trend: { direction: 'NEUTRAL', strength: 0, health: 0, confidence: 0 },
         structure: { type: 'RANGING', bos: false, choch: false, strength: 0, institutionalBias: 'NEUTRAL' },
@@ -42,6 +43,7 @@ export class StateManager {
         supportResistance: { nearestSupport: 0, nearestResistance: 0, zoneStrength: 0, executionDistance: 0 },
         candlestick: { pattern: 'None', patternStrength: 0, buyerPressure: 0, sellerPressure: 0, rejectionStrength: 0 },
         priceAction: { currentBehaviour: 'Unknown', continuationProbability: 0, reversalProbability: 0, executionContext: 'Unknown' },
+        microPriceAction: { last5Candles: 'Unknown', currentCandleBehaviour: 'Unknown', wickRejection: 0, bodyExpansion: 0 },
         momentum: { direction: 'NEUTRAL', strength: 0, quality: 0, confidence: 0 },
         volatility: 0,
         compression: false,
@@ -63,15 +65,11 @@ export class StateManager {
       evidence: {
         bullishEvidence: 0,
         bearishEvidence: 0,
-        neutralEvidence: 0,
+        evidenceStrength: 0,
+        confluenceScore: 0,
         supportingEvidence: [],
         contradictingEvidence: [],
-        missingEvidence: [],
-        evidenceStrength: 0,
-        evidenceQuality: 0,
-        evidenceDensity: 'LOW',
-        confluenceScore: 0,
-        evidenceSummary: ''
+        engineVotes: []
       },
       risk: {
         technicalRisk: 0,
@@ -101,6 +99,7 @@ export class StateManager {
       decision: {
         finalSignal: Signal.NO_TRADE,
         decisionConfidence: 0,
+        confidenceBreakdown: [],
         decisionReason: 'System initialized.',
         decisionType: 'Automated',
         recommendedExpiry: 'Wait',
