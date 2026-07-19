@@ -11,7 +11,8 @@ import { AnalysisResult, HistoryItem } from '../types/analysis';
 import { UploadArea } from './UploadArea';
 import { AnalyticsArea } from './AnalyticsArea';
 import { HistoryArea } from './HistoryArea';
-import { FirestoreService } from '../services/db/FirestoreService';
+import { FirestoreService, isQuotaError, isPermissionError } from '../services/db/FirestoreService';
+import { compressImage } from '../lib/imageCompressor';
 import { cn } from '../lib/utils';
 
 export function Dashboard() {
@@ -20,30 +21,78 @@ export function Dashboard() {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'analyzer' | 'history'>('analyzer');
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [savedOutcome, setSavedOutcome] = useState<'PROFIT' | 'LOSS' | 'SKIPPED' | null>(null);
-
-  // Load history from Firestore on mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const logs = await FirestoreService.getLogs();
-        setHistory(logs);
-      } catch (e) {
-        console.error("Failed to load history from Firestore, trying localStorage", e);
-        const savedHistory = localStorage.getItem('antrovex_history');
-        if (savedHistory) {
-          try {
-            setHistory(JSON.parse(savedHistory));
-          } catch (err) {
-            console.error("Failed to parse local history fallback", err);
-          }
+  
+  // 1. Instant Cache Initialization (0 initial Firestore reads)
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedHistory = localStorage.getItem('antrovex_history');
+      if (savedHistory) {
+        try {
+          return JSON.parse(savedHistory);
+        } catch (err) {
+          console.error("Failed to parse local history fallback", err);
         }
       }
+    }
+    return [];
+  });
+
+  const [savedOutcome, setSavedOutcome] = useState<'PROFIT' | 'LOSS' | 'SKIPPED' | null>(null);
+  const [isQuotaExceeded, setIsQuotaExceeded] = useState(FirestoreService.isQuotaExceeded);
+  const [isPermissionDenied, setIsPermissionDenied] = useState(FirestoreService.isPermissionDenied);
+
+  // Pagination & Lazy Loading States
+  const [hasSynced, setHasSynced] = useState(false);
+  const [hasMoreInDb, setHasMoreInDb] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Lazy sync when user navigates to History tab
+  useEffect(() => {
+    if (view !== 'history' || hasSynced || isQuotaExceeded || isPermissionDenied) return;
+
+    const loadInitialPage = async () => {
+      setIsLoadingMore(true);
+      try {
+        if (FirestoreService.isQuotaExceeded) {
+          throw new Error("Quota exceeded (cached state)");
+        }
+        if (FirestoreService.isPermissionDenied) {
+          throw new Error("Permission denied (cached state)");
+        }
+        
+        // Fetch only first page of 5 items
+        const { items: latestLogs, hasMore } = await FirestoreService.getLogs(5);
+        
+        setHistory(prev => {
+          // Merge newly fetched logs with cache, prioritizing the newest DB version
+          const itemMap = new Map<string, HistoryItem>();
+          prev.forEach(item => itemMap.set(item.id, item));
+          latestLogs.forEach(item => itemMap.set(item.id, item));
+          
+          return Array.from(itemMap.values())
+            .sort((a, b) => b.timestamp - a.timestamp);
+        });
+        
+        setHasMoreInDb(hasMore);
+        setHasSynced(true);
+      } catch (e) {
+        if (isQuotaError(e)) {
+          setIsQuotaExceeded(true);
+        }
+        if (isPermissionError(e)) {
+          setIsPermissionDenied(true);
+        }
+        console.warn("Failed to sync history from Firestore, using offline cache", e);
+      } finally {
+        setIsLoadingMore(false);
+      }
     };
-    loadData();
-    
-    // Listen for custom events (navigation only)
+
+    loadInitialPage();
+  }, [view, hasSynced, isQuotaExceeded, isPermissionDenied]);
+
+  // Listen for custom events (navigation only)
+  useEffect(() => {
     const handleViewChange = (e: any) => {
       if (e.detail) setView(e.detail);
     };
@@ -55,10 +104,41 @@ export function Dashboard() {
 
   // Save history to localStorage as secondary backup
   useEffect(() => {
-    if (history.length > 0) {
-      localStorage.setItem('antrovex_history', JSON.stringify(history));
-    }
+    localStorage.setItem('antrovex_history', JSON.stringify(history));
   }, [history]);
+
+  // Load more paginated records
+  const loadMoreHistory = async () => {
+    if (isLoadingMore || !hasMoreInDb || isQuotaExceeded || isPermissionDenied) return;
+    setIsLoadingMore(true);
+    try {
+      // Find the oldest record we have to startafter
+      const oldestLocal = history.length > 0 ? history[history.length - 1].timestamp : undefined;
+      
+      const { items: moreLogs, hasMore } = await FirestoreService.getLogs(5, oldestLocal);
+      
+      setHistory(prev => {
+        const itemMap = new Map<string, HistoryItem>();
+        prev.forEach(item => itemMap.set(item.id, item));
+        moreLogs.forEach(item => itemMap.set(item.id, item));
+        
+        return Array.from(itemMap.values())
+          .sort((a, b) => b.timestamp - a.timestamp);
+      });
+      
+      setHasMoreInDb(hasMore);
+    } catch (e) {
+      if (isQuotaError(e)) {
+        setIsQuotaExceeded(true);
+      }
+      if (isPermissionError(e)) {
+        setIsPermissionDenied(true);
+      }
+      console.warn("Failed to load more records from Firestore", e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -68,12 +148,24 @@ export function Dashboard() {
         return;
       }
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-        setError(null);
-        setResult(null);
-        setSavedOutcome(null);
-        setView('analyzer');
+      reader.onloadend = async () => {
+        try {
+          const originalBase64 = reader.result as string;
+          // Apply canvas-based client-side compression (downscale to max 800px)
+          const compressedBase64 = await compressImage(originalBase64);
+          setPreview(compressedBase64);
+          setError(null);
+          setResult(null);
+          setSavedOutcome(null);
+          setView('analyzer');
+        } catch (err: any) {
+          console.warn("Compression failed, using fallback original source", err);
+          setPreview(reader.result as string);
+          setError(null);
+          setResult(null);
+          setSavedOutcome(null);
+          setView('analyzer');
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -153,6 +245,15 @@ export function Dashboard() {
 
     setSavedOutcome(outcome);
 
+    if (isQuotaExceeded || isPermissionDenied) {
+      const localItem: HistoryItem = {
+        id: `local_${Date.now()}`,
+        ...logData
+      };
+      setHistory(prev => [localItem, ...prev]);
+      return;
+    }
+
     try {
       const docId = await FirestoreService.addLog(logData);
       const newHistoryItem: HistoryItem = {
@@ -161,9 +262,15 @@ export function Dashboard() {
       };
       setHistory(prev => [newHistoryItem, ...prev]);
     } catch (err) {
-      console.error("Firestore save failed, fallback to local storage", err);
+      if (isQuotaError(err)) {
+        setIsQuotaExceeded(true);
+      }
+      if (isPermissionError(err)) {
+        setIsPermissionDenied(true);
+      }
+      console.warn("Firestore save failed, fallback to local storage", err);
       const localItem: HistoryItem = {
-        id: Date.now().toString(),
+        id: `local_${Date.now()}`,
         ...logData
       };
       setHistory(prev => [localItem, ...prev]);
@@ -178,27 +285,121 @@ export function Dashboard() {
   };
 
   const clearHistory = async () => {
+    if (isQuotaExceeded || isPermissionDenied) {
+      setHistory([]);
+      return;
+    }
+
     try {
       await FirestoreService.clearAllLogs();
       setHistory([]);
     } catch (e) {
-      console.error("Failed to clear logs in Firestore", e);
+      if (isQuotaError(e)) {
+        setIsQuotaExceeded(true);
+      }
+      if (isPermissionError(e)) {
+        setIsPermissionDenied(true);
+      }
+      console.warn("Failed to clear logs in Firestore", e);
       setHistory([]);
     }
   };
 
   const removeHistoryItem = async (id: string) => {
+    if (isQuotaExceeded || isPermissionDenied || id.startsWith('local_')) {
+      setHistory(prev => prev.filter(item => item.id !== id));
+      return;
+    }
+
     try {
       await FirestoreService.deleteLog(id);
       setHistory(prev => prev.filter(item => item.id !== id));
     } catch (e) {
-      console.error(`Failed to delete log ${id} in Firestore`, e);
+      if (isQuotaError(e)) {
+        setIsQuotaExceeded(true);
+      }
+      if (isPermissionError(e)) {
+        setIsPermissionDenied(true);
+      }
+      console.warn(`Failed to delete log ${id} in Firestore`, e);
       setHistory(prev => prev.filter(item => item.id !== id));
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 pb-24">
+    <div className="max-w-7xl mx-auto px-6 py-8 pb-24 space-y-6">
+      {isPermissionDenied && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-5 flex flex-col gap-4 text-xs font-mono text-amber-900"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-amber-600 text-base shrink-0">🔒</span>
+            <div className="space-y-1.5">
+              <p className="font-bold text-amber-800 uppercase tracking-wider">
+                Firestore Access Restricted (Permission Denied)
+              </p>
+              <p className="text-black/70 leading-relaxed max-w-4xl">
+                The application has connected to your new Firebase project (<span className="font-bold">antrovex-27b4b</span>) successfully, but Firestore permission rules are currently restricting anonymous reads or writes on the <code className="bg-black/5 px-1 rounded font-bold text-amber-950">telemetry_logs</code> collection.
+              </p>
+              <p className="text-black/70 leading-relaxed max-w-4xl">
+                The application's local offline engine is active. Your market analysis logs will continue to be fully saved and managed inside your browser's local storage.
+              </p>
+              <div className="mt-3 bg-black/90 text-white/90 p-4 rounded-lg font-mono text-[10px] space-y-2 overflow-x-auto border border-black/10 select-all">
+                <p className="text-white/40 mb-1">// Copy & paste this into Firebase Console -&gt; Firestore Database -&gt; Rules:</p>
+                <p>rules_version = '2';</p>
+                <p>service cloud.firestore {"{"}</p>
+                <p>{"  "}match /databases/{"{"}database{"}"}/documents {"{"}</p>
+                <p>{"    "}match /telemetry_logs/{"{"}document{"}"} {"{"}</p>
+                <p>{"      "}allow read, write: if true;</p>
+                <p>{"    "}{"}"}</p>
+                <p>{"  "}{"}"}</p>
+                <p>{"}"}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-start">
+            <a 
+              href="https://console.firebase.google.com/project/antrovex-27b4b/firestore/rules"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold uppercase tracking-widest rounded transition-colors font-bold text-center inline-block"
+            >
+              Configure Firestore Rules
+            </a>
+          </div>
+        </motion.div>
+      )}
+
+      {isQuotaExceeded && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-orange-600 text-base shrink-0">⚠️</span>
+            <div className="space-y-1">
+              <p className="font-bold text-orange-800 uppercase tracking-wider">
+                Database Quota Exceeded (Spark Plan Limit)
+              </p>
+              <p className="text-black/60 leading-relaxed max-w-3xl">
+                The database free daily read limit has been reached for today. The application has activated its local offline-fallback engine. Analysis logs will continue to be fully saved and managed inside your browser's local storage.
+              </p>
+            </div>
+          </div>
+          <a 
+            href="https://console.firebase.google.com/project/gen-lang-client-0802617903/firestore/databases/ai-studio-antrovexaimarket-03ce40b3-c81c-4fc1-b810-1e722f4aeda5/data?openUpgradeDialog=true"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="self-start sm:self-center shrink-0 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold uppercase tracking-widest rounded transition-colors font-bold text-center"
+          >
+            Manage Database
+          </a>
+        </motion.div>
+      )}
+
       <AnimatePresence mode="wait">
         {view === 'analyzer' ? (
           <motion.div 
@@ -322,6 +523,9 @@ export function Dashboard() {
               onSelect={selectHistoryItem}
               onClear={clearHistory}
               onRemove={removeHistoryItem}
+              hasMore={hasMoreInDb && !isQuotaExceeded && !isPermissionDenied}
+              onLoadMore={loadMoreHistory}
+              isLoadingMore={isLoadingMore}
             />
           </motion.div>
         )}

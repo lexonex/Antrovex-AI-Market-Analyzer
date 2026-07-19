@@ -24,9 +24,20 @@ interface HistoryAreaProps {
   onSelect: (item: HistoryItem) => void;
   onClear: () => void;
   onRemove: (id: string) => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 }
 
-export function HistoryArea({ history, onSelect, onClear, onRemove }: HistoryAreaProps) {
+export function HistoryArea({ 
+  history, 
+  onSelect, 
+  onClear, 
+  onRemove,
+  hasMore = false,
+  onLoadMore,
+  isLoadingMore = false
+}: HistoryAreaProps) {
   const [selectedLog, setSelectedLog] = useState<HistoryItem | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
@@ -207,6 +218,18 @@ export function HistoryArea({ history, onSelect, onClear, onRemove }: HistoryAre
               </div>
             </div>
           ))}
+          
+          {hasMore && (
+            <div className="p-6 text-center bg-black/[0.01]">
+              <button
+                onClick={onLoadMore}
+                disabled={isLoadingMore}
+                className="px-6 py-2.5 bg-black hover:bg-orange-600 text-white text-[10px] font-black uppercase tracking-[0.25em] transition-all rounded disabled:opacity-50 inline-flex items-center gap-2"
+              >
+                {isLoadingMore ? 'Loading_More...' : 'Load_More_Records'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
