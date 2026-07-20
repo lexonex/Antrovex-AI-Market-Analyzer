@@ -39,7 +39,7 @@ export class AIService {
     const ai = this.getClient();
     
     const response = await ai.models.generateContent({
-      model: "gemini-flash-latest",
+      model: "gemini-3.1-pro-preview",
       contents: [
         { text: prompt },
         {
